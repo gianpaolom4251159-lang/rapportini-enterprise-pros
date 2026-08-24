@@ -1,5 +1,5 @@
 services:
-  # 1. API BACKEND & LICENZIAMENTO PROS
+  # 1. BACKEND API
   - type: web
     name: pros-backend-api
     env: node
@@ -16,7 +16,7 @@ services:
 
   # 2. PORTALE AMMINISTRATORE
   - type: web
-  env: static
+    env: static
     name: pros-portal-admin
     rootDir: admin-portal
     buildCommand: npm install && npm run build
@@ -28,7 +28,7 @@ services:
 
   # 3. PORTALE OPERATORI
   - type: web
-  env: static
+    env: static
     name: pros-portal-operatori
     rootDir: operator-portal
     buildCommand: npm install && npm run build
@@ -40,7 +40,7 @@ services:
 
   # 4. PORTALE FORNITORE
   - type: web
-  env: static
+    env: static
     name: pros-portal-fornitore
     rootDir: supplier-portal
     buildCommand: npm install && npm run build
@@ -52,4 +52,5 @@ services:
 
 databases:
   - name: pros-db
-    plan: free
+    databaseName: pros_db
+    user: pros_user
