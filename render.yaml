@@ -15,7 +15,8 @@ services:
           property: connectionString
 
   # 2. PORTALE AMMINISTRATORE
-  - type: static
+  - type: web
+  env:static
     name: pros-portal-admin
     rootDir: admin-portal
     buildCommand: npm install && npm run build
@@ -26,7 +27,8 @@ services:
         destination: /index.html
 
   # 3. PORTALE OPERATORI
-  - type: static
+  - type: web
+  env:static
     name: pros-portal-operatori
     rootDir: operator-portal
     buildCommand: npm install && npm run build
@@ -37,7 +39,8 @@ services:
         destination: /index.html
 
   # 4. PORTALE FORNITORE
-  - type: static
+  - type: web
+  env:static
     name: pros-portal-fornitore
     rootDir: supplier-portal
     buildCommand: npm install && npm run build
