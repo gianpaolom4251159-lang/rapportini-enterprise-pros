@@ -1,8 +1,9 @@
 services:
-  # 1. BACKEND API
+  # BACKEND API (Gratuito)
   - type: web
     name: pros-backend-api
     env: node
+    plan: free
     rootDir: backend-api
     buildCommand: npm install && npx prisma generate
     startCommand: node server.js
@@ -14,43 +15,17 @@ services:
           name: pros-db
           property: connectionString
 
-  # 2. PORTALE AMMINISTRATORE
+  # PORTALE ADMIN (Gratuito)
   - type: web
     env: static
     name: pros-portal-admin
     rootDir: admin-portal
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
-  # 3. PORTALE OPERATORI
-  - type: web
-    env: static
-    name: pros-portal-operatori
-    rootDir: operator-portal
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
-  # 4. PORTALE FORNITORE
-  - type: web
-    env: static
-    name: pros-portal-fornitore
-    rootDir: supplier-portal
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 
 databases:
+  # DATABASE POSTGRESQL (Gratuito)
   - name: pros-db
     databaseName: pros_db
     user: pros_user
+    plan: free
