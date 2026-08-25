@@ -1,6 +1,0 @@
-services:
-  - type: web
-    env: static
-    name: rapportini-enterprise-pros
-    buildCommand: echo "Nessuna build"
-    staticPublishPath: ./
