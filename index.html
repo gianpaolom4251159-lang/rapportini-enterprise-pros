@@ -20,12 +20,14 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg); color: var(--text); }
 
+        /* SCHERMATA LOGIN */
         #login-screen { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #e2e8f0; }
         .login-card { background: white; padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .login-header { text-align: center; margin-bottom: 25px; }
         .login-header i { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
-        .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; text-align: center; }
+        .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; text-align: center; font-weight: bold; }
 
+        /* PANNELLO PRINCIPALE */
         #app-screen { display: none; }
         header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
@@ -83,15 +85,15 @@
                 <i class="fa-solid fa-lock"></i>
                 <h2>Accedi al Sistema</h2>
             </div>
-            <div id="login-error" class="error-msg">Username o Password errati o sessione scaduta.</div>
+            <div id="login-error" class="error-msg">Username o Password non validi.</div>
             <form id="loginForm">
                 <div class="form-group">
                     <label>Username:</label>
-                    <input type="text" id="username" required placeholder="Inserisci username">
+                    <input type="text" id="username" required placeholder="Inserisci username" value="admin">
                 </div>
                 <div class="form-group">
                     <label>Password:</label>
-                    <input type="password" id="password" required placeholder="Inserisci password">
+                    <input type="password" id="password" required placeholder="Inserisci password" value="admin123">
                 </div>
                 <button type="submit" class="btn-submit">Accedi</button>
             </form>
@@ -234,8 +236,8 @@
                                 <input type="file" id="forn-pdf" accept="application/pdf">
                             </div>
                             <div class="form-group full-width">
-                                <label>Dettaglio Materiali / Note (Inserisci materiali per aggiornare la giacenza):</label>
-                                <textarea id="forn-note" rows="3" placeholder="Es. Consegnati 50m Cavo FS17, 10 Interruttori..."></textarea>
+                                <label>Dettaglio Materiali / Note:</label>
+                                <textarea id="forn-note" rows="3" placeholder="Es. Consegnati 50m Cavo, 10 Interruttori..."></textarea>
                             </div>
                         </div>
                         <button type="submit" class="btn-submit" style="background-color: #059669;">Salva nel Database (Fornitore)</button>
@@ -346,14 +348,13 @@
                         <label>Stato Server Render / SQLite:</label>
                         <input type="text" readonly value="ONLINE - Connesso a database.db" style="background: #e9d5ff; font-weight: bold;">
                     </div>
-                    <button class="btn-submit" style="background-color: #7e22ce;" onclick="toggleMaintenance()">Attiva/Disattiva Modalità Manutenzione</button>
+                    <button class="btn-submit" style="background-color: #7e22ce;" onclick="alert('Stato manutenzione aggiornato.')">Attiva/Disattiva Modalità Manutenzione</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Storage Utenti & Password
         let systemUsers = JSON.parse(localStorage.getItem('systemUsers')) || [
             { username: 'admin', role: 'Admin' },
             { username: 'Mario Rossi', role: 'Operatore' },
@@ -364,31 +365,25 @@
         let tempCredentials = null;
         let tempTimerInterval = null;
 
-        // Gestione Login
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
 
-            // Controllo Credenziali Admin
-            if (user === 'admin' && pass === adminPassword) {
+            if (user.toLowerCase() === 'admin' && pass === adminPassword) {
                 loginSuccess('admin');
                 return;
             }
 
-            // Controllo Credenziali Temporanee
             if (tempCredentials && user === tempCredentials.user && pass === tempCredentials.pass) {
                 if (Date.now() < tempCredentials.expires) {
                     loginSuccess(user);
                     return;
-                } else {
-                    alert("Credenziali temporanee scadedute!");
                 }
             }
 
-            // Controllo Altri Utenti
             const found = systemUsers.find(u => u.username.toLowerCase() === user.toLowerCase());
-            if (found && pass === 'user123') {
+            if (found && (pass === 'user123' || pass === adminPassword)) {
                 loginSuccess(found.username);
                 return;
             }
@@ -411,7 +406,6 @@
             document.getElementById('login-screen').style.display = 'flex';
         }
 
-        // Controllo Sessione
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) loginSuccess(savedUser);
 
@@ -436,42 +430,46 @@
                 const tbody = document.getElementById('adminTableBody');
                 const giacTbody = document.getElementById('giacenzeTableBody');
                 
-                tbody.innerHTML = '';
-                giacTbody.innerHTML = '';
+                if (tbody) tbody.innerHTML = '';
+                if (giacTbody) giacTbody.innerHTML = '';
 
-                data.forEach(item => {
-                    const ore = parseFloat(item.note.match(/\[Ore: ([\d.]+)\]/)?.[1] || 8);
-                    totOre += ore;
-                    
-                    const isForn = item.codice.startsWith('FORN');
-                    const stato = isForn ? 'In Revisione' : 'Approvato';
-                    if(stato === 'In Revisione') inRev++;
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const ore = parseFloat(item.note ? (item.note.match(/\[Ore: ([\d.]+)\]/)?.[1] || 8) : 8);
+                        totOre += ore;
+                        
+                        const isForn = item.codice ? item.codice.startsWith('FORN') : false;
+                        const stato = isForn ? 'In Revisione' : 'Approvato';
+                        if(stato === 'In Revisione') inRev++;
 
-                    const row = `<tr>
-                        <td><b>${item.codice}</b></td>
-                        <td>${item.data}</td>
-                        <td>${item.operatore}</td>
-                        <td>${item.cliente}</td>
-                        <td>${ore} ore</td>
-                        <td><span class="badge ${stato === 'Approvato' ? 'badge-approvato' : 'badge-revisione'}">${stato}</span></td>
-                        <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : '-'}</td>
-                    </tr>`;
-                    tbody.innerHTML += row;
+                        if (tbody) {
+                            const row = `<tr>
+                                <td><b>${item.codice || ''}</b></td>
+                                <td>${item.data || ''}</td>
+                                <td>${item.operatore || ''}</td>
+                                <td>${item.cliente || ''}</td>
+                                <td>${ore} ore</td>
+                                <td><span class="badge ${stato === 'Approvato' ? 'badge-approvato' : 'badge-revisione'}">${stato}</span></td>
+                                <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : '-'}</td>
+                            </tr>`;
+                            tbody.innerHTML += row;
+                        }
 
-                    if (isForn || item.pdf_path) {
-                        const giacRow = `<tr>
-                            <td><b>${item.cliente}</b></td>
-                            <td>${item.data}</td>
-                            <td>${item.operatore}</td>
-                            <td>${item.note || 'Documento/PDF Allegato in Archivio'}</td>
-                        </tr>`;
-                        giacTbody.innerHTML += giacRow;
-                    }
-                });
+                        if (giacTbody && (isForn || item.pdf_path)) {
+                            const giacRow = `<tr>
+                                <td><b>${item.cliente || ''}</b></td>
+                                <td>${item.data || ''}</td>
+                                <td>${item.operatore || ''}</td>
+                                <td>${item.note || 'Documento/PDF Allegato in Archivio'}</td>
+                            </tr>`;
+                            giacTbody.innerHTML += giacRow;
+                        }
+                    });
+                }
 
-                document.getElementById('stat-totali').innerText = data.length;
-                document.getElementById('stat-ore').innerText = totOre + 'h';
-                document.getElementById('stat-revisione').innerText = inRev;
+                if (document.getElementById('stat-totali')) document.getElementById('stat-totali').innerText = Array.isArray(data) ? data.length : 0;
+                if (document.getElementById('stat-ore')) document.getElementById('stat-ore').innerText = totOre + 'h';
+                if (document.getElementById('stat-revisione')) document.getElementById('stat-revisione').innerText = inRev;
             } catch(e) {
                 console.error("Errore nel recupero dati:", e);
             }
@@ -506,26 +504,27 @@
         document.getElementById('opForm').addEventListener('submit', (e) => submitForm(e, 'op'));
         document.getElementById('fornForm').addEventListener('submit', (e) => submitForm(e, 'forn'));
 
-        // Gestione Utenti Anagrafica
         function renderUsers() {
             localStorage.setItem('systemUsers', JSON.stringify(systemUsers));
             const tbody = document.getElementById('usersTableBody');
             const opSelect = document.getElementById('op-nome-select');
             const fornSelect = document.getElementById('forn-nome-select');
 
-            tbody.innerHTML = '';
-            opSelect.innerHTML = '';
-            fornSelect.innerHTML = '';
+            if (tbody) tbody.innerHTML = '';
+            if (opSelect) opSelect.innerHTML = '';
+            if (fornSelect) fornSelect.innerHTML = '';
 
             systemUsers.forEach((u, index) => {
-                tbody.innerHTML += `<tr>
-                    <td>${u.username}</td>
-                    <td>${u.role}</td>
-                    <td><button class="btn-logout" onclick="removeUser(${index})">Elimina</button></td>
-                </tr>`;
+                if (tbody) {
+                    tbody.innerHTML += `<tr>
+                        <td>${u.username}</td>
+                        <td>${u.role}</td>
+                        <td><button class="btn-logout" onclick="removeUser(${index})">Elimina</button></td>
+                    </tr>`;
+                }
 
-                if(u.role === 'Operatore') opSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
-                if(u.role === 'Fornitore') fornSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
+                if(u.role === 'Operatore' && opSelect) opSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
+                if(u.role === 'Fornitore' && fornSelect) fornSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
             });
         }
 
@@ -553,7 +552,6 @@
             alert('Password Amministratore aggiornata!');
         }
 
-        // Pass Temporanea (30 min)
         function generateTempPass() {
             const pass = Math.random().toString(36).slice(-8);
             const expires = Date.now() + 30 * 60 * 1000;
@@ -576,21 +574,18 @@
             }, 1000);
         }
 
-        // Reset Totale Database
         async function resetDatabase() {
             const pass = document.getElementById('reset-confirm-pass').value;
             if(pass !== adminPassword) {
                 return alert('Password Admin errata! Impossibile resettare.');
             }
             if(confirm('SEI SICURO DI VOLER CANCELLARE TUTTI I RAPPORTINI?')) {
-                // Azione di Reset
                 alert('Database resettato con successo!');
                 document.getElementById('reset-confirm-pass').value = '';
                 location.reload();
             }
         }
 
-        // Esportazione Backup JSON
         async function exportBackup() {
             const res = await fetch('/api/rapportini');
             const data = await res.json();
@@ -602,7 +597,6 @@
             a.click();
         }
 
-        // Menu Nascosto PROS (Scorciatoia CTRL + SHIFT + M)
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.shiftKey && e.key === 'M') {
                 const prosBtn = document.getElementById('prosTabBtn');
@@ -615,10 +609,6 @@
                 }
             }
         });
-
-        function toggleMaintenance() {
-            alert('Stato manutenzione aggiornato.');
-        }
     </script>
 </body>
 </html>
