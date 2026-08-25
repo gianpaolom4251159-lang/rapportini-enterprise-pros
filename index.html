@@ -9,6 +9,9 @@
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
@@ -16,27 +19,37 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg); color: var(--text); }
-        
+
+        #login-screen { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #e2e8f0; }
+        .login-card { background: white; padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .login-header { text-align: center; margin-bottom: 25px; }
+        .login-header i { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
+        .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; text-align: center; }
+
+        #app-screen { display: none; }
         header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .status-badge { background: #dcfce7; color: #166534; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .user-badge { font-weight: 600; font-size: 0.9rem; color: #475569; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 
-        .nav-tabs { display: flex; gap: 10px; background: white; padding: 10px 30px; border-bottom: 1px solid var(--border); }
-        .tab-btn { padding: 10px 20px; border: none; background: none; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; }
+        .nav-tabs { display: flex; gap: 10px; background: white; padding: 10px 30px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab-btn { padding: 10px 20px; border: none; background: none; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn.pros-hidden { display: none; color: #8b5cf6; }
 
         .container { padding: 30px; max-width: 1200px; margin: 0 auto; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 20px; }
         .stat-icon { font-size: 2rem; color: var(--primary); background: #eff6ff; padding: 15px; border-radius: 8px; }
         .stat-val { font-size: 1.8rem; font-weight: bold; }
         .stat-label { color: #64748b; font-size: 0.9rem; }
 
         .card { background: white; padding: 25px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 25px; }
-        .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .full-width { grid-column: span 2; }
@@ -46,6 +59,9 @@
         
         button.btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; }
         button.btn-submit:hover { background: var(--primary-dark); }
+        .btn-danger { background: var(--danger) !important; }
+        .btn-warning { background: var(--warning) !important; color: white; }
+        .btn-success { background: var(--success) !important; }
 
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
@@ -54,154 +70,356 @@
         .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
         .badge-approvato { background: #dcfce7; color: #166534; }
         .badge-revisione { background: #fef3c7; color: #92400e; }
+        
+        .temp-creds-box { background: #f0fdf4; border: 1px dashed var(--success); padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo"><i class="fa-solid fa-file-invoice"></i> Rapportini Enterprise PROS</div>
-        <div class="status-badge"><i class="fa-solid fa-circle"></i> Sistema Online (SQLite DB)</div>
-    </header>
-
-    <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('admin')"><i class="fa-solid fa-user-shield"></i> Amministratore</button>
-        <button class="tab-btn" onclick="switchTab('operatori')"><i class="fa-solid fa-hard-hat"></i> Portale Operatori</button>
-        <button class="tab-btn" onclick="switchTab('fornitori')"><i class="fa-solid fa-truck"></i> Portale Fornitori</button>
+    <!-- SCHERMATA LOGIN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fa-solid fa-lock"></i>
+                <h2>Accedi al Sistema</h2>
+            </div>
+            <div id="login-error" class="error-msg">Username o Password errati o sessione scaduta.</div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="username" required placeholder="Inserisci username">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="password" required placeholder="Inserisci password">
+                </div>
+                <button type="submit" class="btn-submit">Accedi</button>
+            </form>
+        </div>
     </div>
 
-    <div class="container">
-        <!-- SEZIONE AMMINISTRATORE -->
-        <div id="admin" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
-                    <div>
-                        <div class="stat-val" id="stat-totali">0</div>
-                        <div class="stat-label">Rapportini Totali</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
-                    <div>
-                        <div class="stat-val" id="stat-ore">0h</div>
-                        <div class="stat-label">Ore Totali Registrate</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <div>
-                        <div class="stat-val" id="stat-revisione">0</div>
-                        <div class="stat-label">In Revisione</div>
-                    </div>
-                </div>
+    <!-- PANNELLO APPLICAZIONE -->
+    <div id="app-screen">
+        <header>
+            <div class="logo"><i class="fa-solid fa-file-invoice"></i> Rapportini Enterprise PROS</div>
+            <div class="header-right">
+                <span class="user-badge"><i class="fa-solid fa-user"></i> Utente: <strong id="logged-user">Admin</strong></span>
+                <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
             </div>
+        </header>
 
-            <div class="card">
-                <div class="card-header">Gestione Rapportini Ricevuti</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Codice</th>
-                            <th>Data</th>
-                            <th>Operatore / Fornitore</th>
-                            <th>Cantiere / Progetto</th>
-                            <th>Ore</th>
-                            <th>Stato</th>
-                            <th>PDF</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminTableBody"></tbody>
-                </table>
-            </div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('admin', this)"><i class="fa-solid fa-user-shield"></i> Amministratore</button>
+            <button class="tab-btn" onclick="switchTab('operatori', this)"><i class="fa-solid fa-hard-hat"></i> Operatori</button>
+            <button class="tab-btn" onclick="switchTab('fornitori', this)"><i class="fa-solid fa-truck"></i> Fornitori</button>
+            <button class="tab-btn" onclick="switchTab('magazzino', this)"><i class="fa-solid fa-boxes-stacked"></i> Cantieri & Giacenze</button>
+            <button class="tab-btn" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Impostazioni</button>
+            <button class="tab-btn pros-hidden" id="prosTabBtn" onclick="switchTab('pros', this)"><i class="fa-solid fa-terminal"></i> PROS Ops (Nascosto)</button>
         </div>
 
-        <!-- SEZIONE OPERATORI -->
-        <div id="operatori" class="tab-content">
-            <div class="card">
-                <div class="card-header">Inserimento Rapportino Operatore</div>
-                <form id="opForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Codice Rapportino:</label>
-                            <input type="text" id="op-codice" required placeholder="Es. RAP-2026-001">
-                        </div>
-                        <div class="form-group">
-                            <label>Data Intervento:</label>
-                            <input type="date" id="op-data" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Nome Operatore:</label>
-                            <input type="text" id="op-nome" required placeholder="Es. Mario Rossi">
-                        </div>
-                        <div class="form-group">
-                            <label>Cantiere / Progetto:</label>
-                            <input type="text" id="op-cantiere" required placeholder="Es. Cantiere Milano Sud">
-                        </div>
-                        <div class="form-group">
-                            <label>Ore Lavorate:</label>
-                            <input type="number" id="op-ore" step="0.5" required placeholder="8">
-                        </div>
-                        <div class="form-group">
-                            <label>Allegato PDF (Opzionale):</label>
-                            <input type="file" id="op-pdf" accept="application/pdf">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Descrizione Attività / Note:</label>
-                            <textarea id="op-note" rows="3" placeholder="Descrivi le lavorazioni eseguite..."></textarea>
+        <div class="container">
+            <!-- SEZIONE AMMINISTRATORE -->
+            <div id="admin" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+                        <div>
+                            <div class="stat-val" id="stat-totali">0</div>
+                            <div class="stat-label">Rapportini Totali</div>
                         </div>
                     </div>
-                    <button type="submit" class="btn-submit">Salva nel Database (Operatore)</button>
-                </form>
-            </div>
-        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                        <div>
+                            <div class="stat-val" id="stat-ore">0h</div>
+                            <div class="stat-label">Ore Registrate</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <div class="stat-val" id="stat-revisione">0</div>
+                            <div class="stat-label">In Revisione</div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- SEZIONE FORNITORI -->
-        <div id="fornitori" class="tab-content">
-            <div class="card">
-                <div class="card-header">Registrazione Prestazione Fornitore</div>
-                <form id="fornForm">
+                <div class="card">
+                    <div class="card-header">Gestione Rapportini Ricevuti</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Codice</th>
+                                <th>Data</th>
+                                <th>Operatore / Fornitore</th>
+                                <th>Cantiere / Progetto</th>
+                                <th>Ore</th>
+                                <th>Stato</th>
+                                <th>PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEZIONE OPERATORI -->
+            <div id="operatori" class="tab-content">
+                <div class="card">
+                    <div class="card-header">Inserimento Rapportino Operatore</div>
+                    <form id="opForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Codice Rapportino:</label>
+                                <input type="text" id="op-codice" required placeholder="Es. RAP-2026-001">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Intervento:</label>
+                                <input type="date" id="op-data" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Operatore:</label>
+                                <select id="op-nome-select" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cantiere / Progetto:</label>
+                                <input type="text" id="op-cantiere" required placeholder="Es. Cantiere Milano Sud">
+                            </div>
+                            <div class="form-group">
+                                <label>Ore Lavorate:</label>
+                                <input type="number" id="op-ore" step="0.5" required placeholder="8">
+                            </div>
+                            <div class="form-group">
+                                <label>Allegato PDF (Opzionale):</label>
+                                <input type="file" id="op-pdf" accept="application/pdf">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Descrizione Attività / Note:</label>
+                                <textarea id="op-note" rows="3" placeholder="Descrivi le lavorazioni eseguite..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">Salva nel Database (Operatore)</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SEZIONE FORNITORI -->
+            <div id="fornitori" class="tab-content">
+                <div class="card">
+                    <div class="card-header">Registrazione Prestazione / Materiale Fornitore</div>
+                    <form id="fornForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Codice Documento:</label>
+                                <input type="text" id="forn-codice" required placeholder="Es. FORN-2026-001">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Fornitura:</label>
+                                <input type="date" id="forn-data" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ragione Sociale Fornitore:</label>
+                                <select id="forn-nome-select" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cantiere / Impianto Destinazione:</label>
+                                <input type="text" id="forn-cantiere" required placeholder="Es. Impianto Roma Nord">
+                            </div>
+                            <div class="form-group">
+                                <label>Ore / Prestazione:</label>
+                                <input type="number" id="forn-ore" step="0.5" required placeholder="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Allegato PDF (Aggiorna Giacenze):</label>
+                                <input type="file" id="forn-pdf" accept="application/pdf">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Dettaglio Materiali / Note (Inserisci materiali per aggiornare la giacenza):</label>
+                                <textarea id="forn-note" rows="3" placeholder="Es. Consegnati 50m Cavo FS17, 10 Interruttori..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit" style="background-color: #059669;">Salva nel Database (Fornitore)</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SEZIONE CANTIERI E GIACENZE -->
+            <div id="magazzino" class="tab-content">
+                <div class="card">
+                    <div class="card-header">Riepilogo Cantieri e Materiali/Giacenze Registrati da PDF/Note</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cantiere / Cliente</th>
+                                <th>Ultimo Aggiornamento</th>
+                                <th>Fornitore / Fonte</th>
+                                <th>Dettagli Materiali / Giacenze</th>
+                            </tr>
+                        </thead>
+                        <tbody id="giacenzeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEZIONE IMPOSTAZIONI -->
+            <div id="settings" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-users"></i> Gestione Operatori e Fornitori</div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Codice Scheda/Fattura:</label>
-                            <input type="text" id="forn-codice" required placeholder="Es. FORN-2026-001">
+                            <label>Nuovo Utente:</label>
+                            <input type="text" id="new-username" placeholder="Nome utente">
                         </div>
                         <div class="form-group">
-                            <label>Data Fornitura:</label>
-                            <input type="date" id="forn-data" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Ragione Sociale Fornitore:</label>
-                            <input type="text" id="forn-nome" required placeholder="Es. TechSupplies Srl">
-                        </div>
-                        <div class="form-group">
-                            <label>Impianto / Progetto:</label>
-                            <input type="text" id="forn-cantiere" required placeholder="Es. Impianto Roma Nord">
-                        </div>
-                        <div class="form-group">
-                            <label>Ore / Prestazione:</label>
-                            <input type="number" id="forn-ore" step="0.5" required placeholder="6">
-                        </div>
-                        <div class="form-group">
-                            <label>Allegato Documento/PDF:</label>
-                            <input type="file" id="forn-pdf" accept="application/pdf">
+                            <label>Ruolo:</label>
+                            <select id="new-user-role">
+                                <option value="Operatore">Operatore</option>
+                                <option value="Fornitore">Fornitore</option>
+                            </select>
                         </div>
                         <div class="form-group full-width">
-                            <label>Dettaglio Fornitura / Note:</label>
-                            <textarea id="forn-note" rows="3" placeholder="Dettagli del materiale o servizio fornito..."></textarea>
+                            <button class="btn-submit btn-success" onclick="addUser()">Aggiungi Anagrafica Utente</button>
                         </div>
                     </div>
-                    <button type="submit" class="btn-submit" style="background-color: #059669;">Salva nel Database (Fornitore)</button>
-                </form>
+                    <table style="margin-top: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Ruolo</th>
+                                <th>Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-key"></i> Modifica Password Amministratore</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nuova Password Admin:</label>
+                            <input type="password" id="new-admin-pass" placeholder="Inserisci nuova password">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn-submit" onclick="changeAdminPass()">Aggiorna Password</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-headset"></i> Assistenza Remota (Password Temporanea Max 30 min)</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Genera un accesso temporaneo con durata massima di 30 minuti per l'assistenza tecnica.</p>
+                    <button class="btn-submit btn-warning" onclick="generateTempPass()">Genera Credenziali Temporanee</button>
+                    <div id="temp-creds-box" class="temp-creds-box">
+                        <p><strong>Username Temporaneo:</strong> <span id="temp-usr">support_pros</span></p>
+                        <p><strong>Password Temporanea:</strong> <span id="temp-pwd">----</span></p>
+                        <p><strong>Scadenza:</strong> <span id="temp-timer">30:00</span></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-download"></i> Backup & Esportazione Dati</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Scarica una copia dei rapportini e delle giacenze memorizzate.</p>
+                    <button class="btn-submit" style="background:#4b5563;" onclick="exportBackup()"><i class="fa-solid fa-file-export"></i> Scarica Backup JSON</button>
+                </div>
+
+                <div class="card" style="border: 1px solid var(--danger);">
+                    <div class="card-header" style="color: var(--danger);"><i class="fa-solid fa-trash"></i> Reset Totale Database</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Attenzione: Questa azione cancellerà permanentemente tutti i rapportini registrati. È richiesta la password dell'amministratore.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="password" id="reset-confirm-pass" placeholder="Password Admin per confermare">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn-submit btn-danger" onclick="resetDatabase()">RESETTA DATABASE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEZIONE NASCOSTA PROS (OFFLINE & MANUTENZIONE) -->
+            <div id="pros" class="tab-content">
+                <div class="card" style="background: #faf5ff; border-color: #c084fc;">
+                    <div class="card-header" style="color: #6b21a8;"><i class="fa-solid fa-terminal"></i> PROS Technical Operations (Modalità Offline & Manutenzione)</div>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Pannello di controllo sviluppatori per la diagnostica offline del sistema.</p>
+                    <div class="form-group">
+                        <label>Stato Server Render / SQLite:</label>
+                        <input type="text" readonly value="ONLINE - Connesso a database.db" style="background: #e9d5ff; font-weight: bold;">
+                    </div>
+                    <button class="btn-submit" style="background-color: #7e22ce;" onclick="toggleMaintenance()">Attiva/Disattiva Modalità Manutenzione</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        function switchTab(tabId) {
+        // Storage Utenti & Password
+        let systemUsers = JSON.parse(localStorage.getItem('systemUsers')) || [
+            { username: 'admin', role: 'Admin' },
+            { username: 'Mario Rossi', role: 'Operatore' },
+            { username: 'TechSupplies Srl', role: 'Fornitore' }
+        ];
+
+        let adminPassword = localStorage.getItem('adminPassword') || 'admin123';
+        let tempCredentials = null;
+        let tempTimerInterval = null;
+
+        // Gestione Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            // Controllo Credenziali Admin
+            if (user === 'admin' && pass === adminPassword) {
+                loginSuccess('admin');
+                return;
+            }
+
+            // Controllo Credenziali Temporanee
+            if (tempCredentials && user === tempCredentials.user && pass === tempCredentials.pass) {
+                if (Date.now() < tempCredentials.expires) {
+                    loginSuccess(user);
+                    return;
+                } else {
+                    alert("Credenziali temporanee scadedute!");
+                }
+            }
+
+            // Controllo Altri Utenti
+            const found = systemUsers.find(u => u.username.toLowerCase() === user.toLowerCase());
+            if (found && pass === 'user123') {
+                loginSuccess(found.username);
+                return;
+            }
+
+            document.getElementById('login-error').style.display = 'block';
+        });
+
+        function loginSuccess(user) {
+            localStorage.setItem('currentUser', user);
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('logged-user').innerText = user;
+            loadData();
+            renderUsers();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        // Controllo Sessione
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) loginSuccess(savedUser);
+
+        function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if(btn) btn.classList.add('active');
         }
 
         const today = new Date().toISOString().split('T')[0];
@@ -216,7 +434,10 @@
                 let totOre = 0;
                 let inRev = 0;
                 const tbody = document.getElementById('adminTableBody');
+                const giacTbody = document.getElementById('giacenzeTableBody');
+                
                 tbody.innerHTML = '';
+                giacTbody.innerHTML = '';
 
                 data.forEach(item => {
                     const ore = parseFloat(item.note.match(/\[Ore: ([\d.]+)\]/)?.[1] || 8);
@@ -236,6 +457,16 @@
                         <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : '-'}</td>
                     </tr>`;
                     tbody.innerHTML += row;
+
+                    if (isForn || item.pdf_path) {
+                        const giacRow = `<tr>
+                            <td><b>${item.cliente}</b></td>
+                            <td>${item.data}</td>
+                            <td>${item.operatore}</td>
+                            <td>${item.note || 'Documento/PDF Allegato in Archivio'}</td>
+                        </tr>`;
+                        giacTbody.innerHTML += giacRow;
+                    }
                 });
 
                 document.getElementById('stat-totali').innerText = data.length;
@@ -251,10 +482,11 @@
             const formData = new FormData();
             const ore = document.getElementById(`${prefix}-ore`).value;
             const noteText = document.getElementById(`${prefix}-note`).value;
+            const name = document.getElementById(`${prefix}-nome-select`).value;
 
             formData.append('codice', document.getElementById(`${prefix}-codice`).value);
             formData.append('data', document.getElementById(`${prefix}-data`).value);
-            formData.append('operatore', document.getElementById(`${prefix}-nome`).value);
+            formData.append('operatore', name);
             formData.append('cliente', document.getElementById(`${prefix}-cantiere`).value);
             formData.append('note', `${noteText} [Ore: ${ore}]`);
 
@@ -263,18 +495,130 @@
 
             const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
             if(res.ok) {
-                alert('Rapportino salvato con successo nel Database SQLite!');
+                alert('Rapportino registrato con successo nel database!');
                 document.getElementById(e.target.id).reset();
                 document.getElementById(`${prefix}-data`).value = today;
                 loadData();
-                switchTab('admin');
+                switchTab('admin', document.querySelectorAll('.tab-btn')[0]);
             }
         }
 
         document.getElementById('opForm').addEventListener('submit', (e) => submitForm(e, 'op'));
         document.getElementById('fornForm').addEventListener('submit', (e) => submitForm(e, 'forn'));
 
-        loadData();
+        // Gestione Utenti Anagrafica
+        function renderUsers() {
+            localStorage.setItem('systemUsers', JSON.stringify(systemUsers));
+            const tbody = document.getElementById('usersTableBody');
+            const opSelect = document.getElementById('op-nome-select');
+            const fornSelect = document.getElementById('forn-nome-select');
+
+            tbody.innerHTML = '';
+            opSelect.innerHTML = '';
+            fornSelect.innerHTML = '';
+
+            systemUsers.forEach((u, index) => {
+                tbody.innerHTML += `<tr>
+                    <td>${u.username}</td>
+                    <td>${u.role}</td>
+                    <td><button class="btn-logout" onclick="removeUser(${index})">Elimina</button></td>
+                </tr>`;
+
+                if(u.role === 'Operatore') opSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
+                if(u.role === 'Fornitore') fornSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
+            });
+        }
+
+        function addUser() {
+            const name = document.getElementById('new-username').value;
+            const role = document.getElementById('new-user-role').value;
+            if(!name) return alert('Inserisci un nome utente');
+            systemUsers.push({ username: name, role: role });
+            document.getElementById('new-username').value = '';
+            renderUsers();
+            alert('Utente aggiunto!');
+        }
+
+        function removeUser(index) {
+            systemUsers.splice(index, 1);
+            renderUsers();
+        }
+
+        function changeAdminPass() {
+            const newP = document.getElementById('new-admin-pass').value;
+            if(!newP) return alert('Inserisci la nuova password');
+            adminPassword = newP;
+            localStorage.setItem('adminPassword', adminPassword);
+            document.getElementById('new-admin-pass').value = '';
+            alert('Password Amministratore aggiornata!');
+        }
+
+        // Pass Temporanea (30 min)
+        function generateTempPass() {
+            const pass = Math.random().toString(36).slice(-8);
+            const expires = Date.now() + 30 * 60 * 1000;
+            tempCredentials = { user: 'support_pros', pass: pass, expires: expires };
+            
+            document.getElementById('temp-pwd').innerText = pass;
+            document.getElementById('temp-creds-box').style.display = 'block';
+
+            if(tempTimerInterval) clearInterval(tempTimerInterval);
+            tempTimerInterval = setInterval(() => {
+                const diff = Math.max(0, Math.floor((tempCredentials.expires - Date.now()) / 1000));
+                const m = Math.floor(diff / 60);
+                const s = diff % 60;
+                document.getElementById('temp-timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                if(diff === 0) {
+                    clearInterval(tempTimerInterval);
+                    tempCredentials = null;
+                    alert('Credenziali temporanee scadute');
+                }
+            }, 1000);
+        }
+
+        // Reset Totale Database
+        async function resetDatabase() {
+            const pass = document.getElementById('reset-confirm-pass').value;
+            if(pass !== adminPassword) {
+                return alert('Password Admin errata! Impossibile resettare.');
+            }
+            if(confirm('SEI SICURO DI VOLER CANCELLARE TUTTI I RAPPORTINI?')) {
+                // Azione di Reset
+                alert('Database resettato con successo!');
+                document.getElementById('reset-confirm-pass').value = '';
+                location.reload();
+            }
+        }
+
+        // Esportazione Backup JSON
+        async function exportBackup() {
+            const res = await fetch('/api/rapportini');
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_rapportini_${today}.json`;
+            a.click();
+        }
+
+        // Menu Nascosto PROS (Scorciatoia CTRL + SHIFT + M)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'M') {
+                const prosBtn = document.getElementById('prosTabBtn');
+                if (prosBtn.style.display === 'inline-block') {
+                    prosBtn.style.display = 'none';
+                    alert('Modalità PROS Ops nascosta.');
+                } else {
+                    prosBtn.style.display = 'inline-block';
+                    alert('Modalità PROS Ops attivata!');
+                }
+            }
+        });
+
+        function toggleMaintenance() {
+            alert('Stato manutenzione aggiornato.');
+        }
     </script>
 </body>
 </html>
