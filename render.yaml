@@ -1,21 +1,6 @@
 services:
-  # PORTALE ADMIN
   - type: web
     env: static
-    name: pros-portal-admin
-    buildCommand: echo "Nessuna build"
-    staticPublishPath: ./admin-portal
-
-  # PORTALE OPERATORI
-  - type: web
-    env: static
-    name: pros-portal-operatori
-    buildCommand: echo "Nessuna build"
-    staticPublishPath: ./operator-portal
-
-  # PORTALE FORNITORE
-  - type: web
-    env: static
-    name: pros-portal-fornitore
-    buildCommand: echo "Nessuna build"
-    staticPublishPath: ./supplier-portal
+    name: rapportini-enterprise-pros
+    buildCommand: echo "Nessuna build necessaria"
+    staticPublishPath: ./
