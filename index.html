@@ -3,523 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapportini Enterprise PROS</title>
-    <!-- FontAwesome & Google Fonts -->
+    <title>Gestione Rapportini Enterprise</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --radius: 12px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Top Bar */
-        header {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: var(--primary);
-        }
-
-        .user-nav {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .badge {
-            background: #eff6ff;
-            color: var(--primary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        /* Tabs Navigation */
-        .portal-tabs {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            padding: 0 2rem;
-            gap: 1.5rem;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 1rem 0.5rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .tab-btn:hover {
-            color: var(--primary);
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-            font-weight: 600;
-        }
-
-        /* Main Container */
-        main {
-            flex: 1;
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Card System */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        /* Dashboard Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .metric-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .metric-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-
-        .metric-blue { background: #eff6ff; color: var(--primary); }
-        .metric-green { background: #ecfdf5; color: var(--success); }
-        .metric-amber { background: #fffbeb; color: var(--warning); }
-
-        .metric-data h4 {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .metric-data .val {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 0.25rem;
-        }
-
-        /* Form Styles */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.25rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-main);
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.85rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--primary);
-        }
-
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Data Tables */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.9rem;
-        }
-
-        th {
-            background: #f1f5f9;
-            padding: 0.75rem 1rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        tr:hover {
-            background: #f8fafc;
-        }
-
-        .status {
-            padding: 0.25rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .status-completed { background: #d1fae5; color: #065f46; }
-        .status-pending { background: #fef3c7; color: #92400e; }
-
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            border-top: 1px solid var(--border);
-            background: var(--bg-card);
-            margin-top: auto;
-        }
+        body { font-family: sans-serif; margin: 20px; background: #f4f6f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 4px; }
+        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { background: #2563eb; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f1f5f9; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">
-            <i class="fa-solid fa-file-invoice"></i>
-            <span>Rapportini Enterprise <span style="font-weight:300;">PROS</span></span>
-        </div>
-        <div class="user-nav">
-            <span class="badge"><i class="fa-solid fa-circle" style="font-size:8px; color:var(--success);"></i> Sistema Online</span>
-            <span style="font-size: 0.9rem; font-weight: 500;">Utente Demo</span>
-        </div>
-    </header>
-
-    <!-- Navigazione Portali Unificata -->
-    <nav class="portal-tabs">
-        <button class="tab-btn active" onclick="switchTab('admin')">
-            <i class="fa-solid fa-user-shield"></i> Portale Amministratore
-        </button>
-        <button class="tab-btn" onclick="switchTab('operatori')">
-            <i class="fa-solid fa-helmet-safety"></i> Portale Operatori
-        </button>
-        <button class="tab-btn" onclick="switchTab('fornitori')">
-            <i class="fa-solid fa-truck"></i> Portale Fornitori
-        </button>
-    </nav>
-
-    <main>
-        <!-- 1. PORTALE AMMINISTRATORE -->
-        <section id="tab-admin" class="tab-content active">
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-icon metric-blue"><i class="fa-solid fa-clipboard-list"></i></div>
-                    <div class="metric-data">
-                        <h4>Rapportini Mese</h4>
-                        <div class="val">142</div>
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-icon metric-green"><i class="fa-solid fa-clock"></i></div>
-                    <div class="metric-data">
-                        <h4>Ore Totali</h4>
-                        <div class="val">1,136h</div>
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-icon metric-amber"><i class="fa-solid fa-spinner"></i></div>
-                    <div class="metric-data">
-                        <h4>In Approvazione</h4>
-                        <div class="val">8</div>
-                    </div>
-                </div>
+    <div class="card">
+        <h2>Nuovo Rapportino (Salvataggio su database.db)</h2>
+        <form id="rapForm">
+            <div class="form-group">
+                <label>Codice Rapportino:</label>
+                <input type="text" id="codice" required placeholder="Es. RAP-2026-001">
             </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Gestione Rapportini Recenti</h3>
-                    <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"><i class="fa-solid fa-download"></i> Esporta Excel</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Data</th>
-                                <th>Operatore / Fornitore</th>
-                                <th>Cantiere / Progetto</th>
-                                <th>Ore Work</th>
-                                <th>Stato</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-admin-body">
-                            <tr>
-                                <td>#RAP-2026-001</td>
-                                <td>25/08/2026</td>
-                                <td>Mario Rossi</td>
-                                <td>Cantiere Milano Sud</td>
-                                <td>8 ore</td>
-                                <td><span class="status status-completed">Approvato</span></td>
-                            </tr>
-                            <tr>
-                                <td>#RAP-2026-002</td>
-                                <td>25/08/2026</td>
-                                <td>TechSupplies Srl</td>
-                                <td>Impianto Roma Nord</td>
-                                <td>6 ore</td>
-                                <td><span class="status status-pending">In Revisione</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="form-group">
+                <label>Data:</label>
+                <input type="date" id="data" required>
             </div>
-        </section>
-
-        <!-- 2. PORTALE OPERATORI -->
-        <section id="tab-operatori" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Compila Nuovo Rapportino Giornaliero</h3>
-                </div>
-                <form onsubmit="saveRapportino(event, 'operatori')">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nome Operatore</label>
-                            <input type="text" id="op-nome" placeholder="Es. Gianpaolo Mazzola" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Data Intervento</label>
-                            <input type="date" id="op-data" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Cantiere / Destinazione</label>
-                            <input type="text" id="op-cantiere" placeholder="Es. Sede Centrale" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Ore Lavorate</label>
-                            <input type="number" id="op-ore" min="1" max="24" placeholder="8" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Descrizione Attività Svolta</label>
-                            <textarea id="op-note" rows="4" placeholder="Dettagli sulle lavorazioni eseguite, materiali usati, etc..."></textarea>
-                        </div>
-                    </div>
-                    <div style="margin-top: 1.5rem; text-align: right;">
-                        <button type="submit" class="btn"><i class="fa-solid fa-paper-plane"></i> Invia Rapportino</button>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label>Operatore:</label>
+                <input type="text" id="operatore" required placeholder="Nome operatore">
             </div>
-        </section>
-
-        <!-- 3. PORTALE FORNITORI -->
-        <section id="tab-fornitori" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Inserimento Prestazioni Fornitore / Subappalto</h3>
-                </div>
-                <form onsubmit="saveRapportino(event, 'fornitori')">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Ragione Sociale Fornitore</label>
-                            <input type="text" id="sup-nome" placeholder="Es. EdilServices Srl" required>
-                        </div>
-                        <div class="form-group">
-                            <label>N. Commessa / Riferimento</label>
-                            <input type="text" id="sup-commessa" placeholder="Es. COM-2026-99" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Data Prestazione</label>
-                            <input type="date" id="sup-data" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Ore / Giornate Erogate</label>
-                            <input type="number" id="sup-ore" placeholder="Es. 8" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Note e Report Prestazione</label>
-                            <textarea id="sup-note" rows="4" placeholder="Descrizione delle prestazioni o dei servizi forniti..."></textarea>
-                        </div>
-                    </div>
-                    <div style="margin-top: 1.5rem; text-align: right;">
-                        <button type="submit" class="btn" style="background-color: #0d9488;"><i class="fa-solid fa-file-upload"></i> Trasmetti Scheda Fornitore</button>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label>Cliente / Cantiere:</label>
+                <input type="text" id="cliente" required placeholder="Nome cliente">
             </div>
-        </section>
-    </main>
+            <div class="form-group">
+                <label>Note / Lavorazioni eseguite:</label>
+                <textarea id="note" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Allegato PDF (Opzionale):</label>
+                <input type="file" id="pdf" accept="application/pdf">
+            </div>
+            <button type="submit">Salva nel Database</button>
+        </form>
+    </div>
 
-    <footer>
-        &copy; 2026 Rapportini Enterprise PROS — Gestione Integrata Operatori e Fornitori
-    </footer>
+    <div class="card">
+        <h2>Elenco Rapportini nel Database</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Codice</th>
+                    <th>Data</th>
+                    <th>Operatore</th>
+                    <th>Cliente</th>
+                    <th>Note</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 
     <script>
-        // Imposta la data odierna di default
-        document.querySelectorAll('input[type="date"]').forEach(input => {
-            input.value = new Date().toISOString().split('T')[0];
-        });
+        document.getElementById('data').value = new Date().toISOString().split('T')[0];
 
-        // Gestione Cambio Tab/Portali
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-            event.currentTarget.classList.add('active');
-            document.getElementById('tab-' + tabName).classList.add('active');
-        }
-
-        // Simula il salvataggio dei dati e l'aggiornamento della tabella
-        function saveRapportino(e, type) {
-            e.preventDefault();
-            
-            let nome, data, cantiere, ore;
-            if (type === 'operatori') {
-                nome = document.getElementById('op-nome').value;
-                data = document.getElementById('op-data').value;
-                cantiere = document.getElementById('op-cantiere').value;
-                ore = document.getElementById('op-ore').value;
-            } else {
-                nome = document.getElementById('sup-nome').value;
-                data = document.getElementById('sup-data').value;
-                cantiere = document.getElementById('sup-commessa').value;
-                ore = document.getElementById('sup-ore').value;
-            }
-
-            const tbody = document.getElementById('table-admin-body');
-            const newRow = document.createElement('tr');
-            const id = '#RAP-2026-00' + (tbody.children.length + 1);
-
-            newRow.innerHTML = `
-                <td>${id}</td>
-                <td>${data}</td>
-                <td>${nome}</td>
-                <td>${cantiere}</td>
-                <td>${ore} ore</td>
-                <td><span class="status status-pending">In Revisione</span></td>
-            `;
-
-            tbody.prepend(newRow);
-            alert('Rapportino inviato con successo!');
-            e.target.reset();
-            
-            // Imposta di nuovo la data odierna dopo il reset
-            document.querySelectorAll('input[type="date"]').forEach(input => {
-                input.value = new Date().toISOString().split('T')[0];
+        async function loadRapportini() {
+            const res = await fetch('/api/rapportini');
+            const data = await res.json();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const row = `<tr>
+                    <td>${item.id}</td>
+                    <td>${item.codice}</td>
+                    <td>${item.data}</td>
+                    <td>${item.operatore}</td>
+                    <td>${item.cliente}</td>
+                    <td>${item.note || ''}</td>
+                    <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank">Vedi PDF</a>` : 'Nessuno'}</td>
+                </tr>`;
+                tbody.innerHTML += row;
             });
         }
+
+        document.getElementById('rapForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('codice', document.getElementById('codice').value);
+            formData.append('data', document.getElementById('data').value);
+            formData.append('operatore', document.getElementById('operatore').value);
+            formData.append('cliente', document.getElementById('cliente').value);
+            formData.append('note', document.getElementById('note').value);
+            
+            const pdfInput = document.getElementById('pdf');
+            if (pdfInput.files[0]) {
+                formData.append('pdf', pdfInput.files[0]);
+            }
+
+            const res = await fetch('/api/rapportini', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                alert('Rapportino memorizzato con successo nel database!');
+                document.getElementById('rapForm').reset();
+                document.getElementById('data').value = new Date().toISOString().split('T')[0];
+                loadRapportini();
+            }
+        });
+
+        loadRapportini();
     </script>
 </body>
 </html>
