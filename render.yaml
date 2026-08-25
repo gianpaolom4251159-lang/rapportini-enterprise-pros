@@ -1,21 +1,21 @@
 services:
-  # BACKEND API
-  - type: web
-    name: pros-backend-api
-    env: node
-    plan: free
-    buildCommand: echo "Nessuna build richiesta"
-    startCommand: node backend-api/server.js || node server.js
-
   # PORTALE ADMIN
   - type: web
     env: static
     name: pros-portal-admin
-    buildCommand: echo "Nessuna build richiesta"
+    buildCommand: echo "Nessuna build"
     staticPublishPath: ./admin-portal
 
-databases:
-  - name: pros-db
-    databaseName: pros_db
-    user: pros_user
-    plan: free
+  # PORTALE OPERATORI
+  - type: web
+    env: static
+    name: pros-portal-operatori
+    buildCommand: echo "Nessuna build"
+    staticPublishPath: ./operator-portal
+
+  # PORTALE FORNITORE
+  - type: web
+    env: static
+    name: pros-portal-fornitore
+    buildCommand: echo "Nessuna build"
+    staticPublishPath: ./supplier-portal
