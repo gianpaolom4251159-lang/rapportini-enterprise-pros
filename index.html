@@ -1,312 +1,816 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rapportini Enterprise PROS</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
-    main { flex: 1; padding: 20px; }
-    
-    /* Overlay Manutenzione Offline */
-    #maintenance-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.95);
-      color: #fff;
-      z-index: 9999;
-      text-align: center;
-      padding-top: 100px;
-    }
-
-    .countdown-box {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #38bdf8;
-      margin: 20px 0;
-    }
-
-    footer {
-      background-color: #1e293b;
-      color: #94a3b8;
-      text-align: center;
-      padding: 15px;
-      font-size: 0.9rem;
-      border-top: 1px solid #334155;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Overlay Modalità Manutenzione -->
-  <div id="maintenance-overlay">
-    <h1>Sistema in Manutenzione Offline</h1>
-    <p>Il sistema è temporaneamente disattivato per aggiornamenti di licenza o manutenzione programmata.</p>
-    <div>Scadenza / Reset Licenza tra:</div>
-    <div class="countdown-box" id="countdown-timer">00d 00h 00m 00s</div>
-    
-    <!-- Modulo Login Nascosto per Tecnici/Manutenzione -->
-    <div style="margin-top: 30px;">
-      <input type="text" id="maint-user" placeholder="Utente Tecnico" style="padding: 8px;">
-      <input type="password" id="maint-pass" placeholder="Password Nascosta" style="padding: 8px;">
-      <button onclick="loginMaintenance()" style="padding: 8px 15px;">Sblocca System</button>
-    </div>
-  </div>
-
-  <main>
-    <h2>Dashboard Principale</h2>
-    <p>Stato Licenza Key: <strong id="license-status">Verifica in corso...</strong></p>
-    
-    <!-- Pulsante di test Manutenzione -->
-    <button onclick="toggleMaintenance(true)">Attiva Manutenzione Manualmente</button>
-  </main>
-
-  <!-- Footer con Diritto di Autore -->
-  <footer>
-    <p>&copy; 2026 <strong>Rapportini Enterprise PROS</strong>. Tutti i diritti riservati.</p>
-  </footer>
-
-  <script>
-    // Configurazione Client-side
-    const LICENSE_KEY = "PROS-2026-X89K-MAINT";
-    const EXPIRATION_DATE = new Date("2026-12-31T23:59:59").getTime();
-
-    // Credenziali Nascoste di Manutenzione (Offline Bypass)
-    const MAINT_ADMIN_USER = "admin_maint";
-    const MAINT_ADMIN_PASS = "Maint#2026!SecretPass";
-
-    // Contatore alla rovescia (Countdown License / Maintenance)
-    const timerInterval = setInterval(function() {
-      const now = new Date().getTime();
-      const distance = EXPIRATION_DATE - now;
-
-      if (distance < 0) {
-        clearInterval(timerInterval);
-        document.getElementById("countdown-timer").innerHTML = "LICENZA SCADUTA";
-        document.getElementById("maintenance-overlay").style.display = "block";
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((Per la tua web app di gestione (es. **Rapportini Enterprise PROS**), ecco un modulo completo e moderno in **HTML, CSS e JavaScript client-side** pronta da inserire nel tuo progetto.
-
-Questo sistema integra:
-1. **Pannello di Manutenzione / Modalità Offline** con un pulsante/accesso nascosto.
-2. **Account e Password Nascosti** per accedere alle impostazioni di manutenzione.
-3. **Contatore alla rovescia (Countdown)** per attivare/disattivare automaticamente la manutenzione.
-4. **Verifica della Licenza (License Key)**.
-5. **Footer completo di Copyright e Diritti Riservati**.
-
----
-
-### Code Implementation (`index.html` / `script.js`)
-
-```html
-<!DOCTYPE html>
-<html lang="it">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapportini Enterprise PROS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #f4f6f9;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
-        .container {
-            flex: 1;
-            padding: 20px;
-        }
+        /* SCHERMATA LOGIN */
+        #login-screen { display: flex; justify-content: center; align-items: center; min-height: 80vh; background: #e2e8f0; flex: 1; }
+        .login-card { background: white; padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .login-header { text-align: center; margin-bottom: 25px; }
+        .login-header i { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
+        .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; text-align: center; font-weight: bold; }
 
-        /* Banner di manutenzione */
-        #maintenance-banner {
-            display: none;
-            background-color: #ff9800;
-            color: #fff;
-            text-align: center;
-            padding: 15px;
-            font-weight: bold;
-        }
+        /* PANNELLO PRINCIPALE */
+        #app-screen { display: none; flex: 1; }
+        header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .user-badge { font-weight: 600; font-size: 0.9rem; color: #475569; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 
-        /* Overlay Offline / Manutenzione */
-        #offline-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
+        .nav-tabs { display: flex; gap: 10px; background: white; padding: 10px 30px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab-btn { padding: 10px 20px; border: none; background: none; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn.pros-hidden { display: none; color: #8b5cf6; }
 
-        /* Modale di Login Manutenzione */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: #fff;
-            color: #333;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border-radius: 8px;
-            z-index: 10000;
-            width: 320px;
-        }
+        .container { padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .modal h3 { margin-top: 0; }
-        .modal input {
-            width: 100%;
-            padding: 8px;
-            margin: 8px 0;
-            box-sizing: border-box;
-        }
-        .modal button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 20px; }
+        .stat-icon { font-size: 2rem; color: var(--primary); background: #eff6ff; padding: 15px; border-radius: 8px; }
+        .stat-val { font-size: 1.8rem; font-weight: bold; }
+        .stat-label { color: #64748b; font-size: 0.9rem; }
 
-        /* Footer con Copyright e pulsante nascosto */
-        footer {
-            background-color: #1e293b;
-            color: #cbd5e1;
-            text-align: center;
-            padding: 15px;
-            font-size: 14px;
-            position: relative;
-        }
+        .card { background: white; padding: 25px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 25px; }
+        .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 
-        .secret-trigger {
-            cursor: default;
-            user-select: none;
-        }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .full-width { grid-column: span 2; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+        
+        button.btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; }
+        button.btn-submit:hover { background: var(--primary-dark); }
+        .btn-danger { background: var(--danger) !important; }
+        .btn-warning { background: var(--warning) !important; color: white; }
+        .btn-success { background: var(--success) !important; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        th { background: #f8fafc; color: #475569; font-weight: 600; }
+        
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+        .badge-approvato { background: #dcfce7; color: #166534; }
+        .badge-fornitore { background: #e0e7ff; color: #3730a3; }
+        .temp-creds-box { background: #f0fdf4; border: 1px dashed var(--success); padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
+
+        /* BANNER E SCHERMATA OFFLINE / MANUTENZIONE */
+        #maintenance-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .maint-box { background: #1e293b; padding: 40px; border-radius: 12px; border: 1px solid #334155; max-width: 500px; width: 100%; }
+        .timer-display { font-size: 2.2rem; font-weight: bold; color: #38bdf8; margin: 20px 0; font-family: monospace; }
+
+        /* FOOTER COPYRIGHT */
+        footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 15px; font-size: 0.85rem; border-top: 1px solid #1e293b; margin-top: auto; }
+        footer strong { color: #cbd5e1; }
+        .secret-click { cursor: default; user-select: none; }
     </style>
 </head>
 <body>
 
-    <!-- Banner Manutenzione Programmata -->
-    <div id="maintenance-banner">
-        Manutenzione programmata in corso. Tempo rimanente: <span id="countdown-timer">--:--:--</span>
+    <!-- SCHERMATA OFFLINE MANUTENZIONE -->
+    <div id="maintenance-screen">
+        <div class="maint-box">
+            <i class="fa-solid fa-gears" style="font-size: 3rem; color: #f59e0b; margin-bottom: 15px;"></i>
+            <h2>Sistema in Manutenzione Offline</h2>
+            <p style="margin-top: 10px; color: #94a3b8;">L'applicazione è temporaneamente sospesa per manutenzione straordinaria o verifica della Licenza Key.</p>
+            
+            <div class="timer-display" id="maint-countdown">00:30:00</div>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 20px;">Tempo stimato prima del ripristino automatico</p>
+
+            <form id="maintBypassForm" style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 20px;">
+                <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; color: #e2e8f0;">Sblocco Tecnico di Emergenza</p>
+                <div class="form-group">
+                    <input type="text" id="maint-user-input" placeholder="Username Tecnico" required style="background: #0f172a; color: white; border-color: #334155;">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="maint-pass-input" placeholder="Password Nascosta" required style="background: #0f172a; color: white; border-color: #334155;">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="maint-key-input" placeholder="License Key (es. PROS-2026-KEY)" required style="background: #0f172a; color: white; border-color: #334155;">
+                </div>
+                <button type="submit" class="btn-submit btn-warning">Disattiva Manutenzione & Accedi</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Schermata Offline/Manutenzione Block -->
-    <div id="offline-overlay">
-        <h1>Applicazione in Manutenzione</h1>
-        <p>Il sistema è momentaneamente offline per aggiornamenti tecnici.</p>
-        <p>Tempo stimato al ripristino: <span id="overlay-countdown">--:--:--</span></p>
+    <!-- SCHERMATA LOGIN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fa-solid fa-lock"></i>
+                <h2>Accedi al Sistema</h2>
+            </div>
+            <div id="login-error" class="error-msg">Username o Password errati.</div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username / Ragione Sociale:</label>
+                    <input type="text" id="username" required placeholder="Es. admin, m.rossi, fornitore_srl">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="password" required placeholder="Inserisci password">
+                </div>
+                <button type="submit" class="btn-submit">Accedi</button>
+            </form>
+        </div>
     </div>
 
-    <div class="container">
-        <h2>Pannello Principale Web App</h2>
-        <p>Contenuto dell'applicazione...</p>
+    <!-- PANNELLO APPLICAZIONE -->
+    <div id="app-screen">
+        <header>
+            <div class="logo"><i class="fa-solid fa-file-invoice"></i> Rapportini Enterprise PROS</div>
+            <div class="header-right">
+                <span class="user-badge"><i class="fa-solid fa-user"></i> Utente: <strong id="logged-user">--</strong> (<span id="logged-role">--</span>)</span>
+                <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </header>
+
+        <div class="nav-tabs" id="mainNavTabs">
+            <button class="tab-btn active" id="tab-btn-admin" onclick="switchTab('admin', this)"><i class="fa-solid fa-user-shield"></i> Amministratore</button>
+            <button class="tab-btn" id="tab-btn-operatori" onclick="switchTab('operatori', this)"><i class="fa-solid fa-hard-hat"></i> Operatore (Rapportini e Spese)</button>
+            <button class="tab-btn" id="tab-btn-fornitori" onclick="switchTab('fornitori', this)"><i class="fa-solid fa-truck-ramp-box"></i> Area Fornitori (DDT / Fatture / Resi)</button>
+            <button class="tab-btn" id="tab-btn-magazzino" onclick="switchTab('magazzino', this)"><i class="fa-solid fa-boxes-stacked"></i> Cantieri & Giacenze</button>
+            <button class="tab-btn" id="tab-btn-settings" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Impostazioni & Utenti</button>
+            <button class="tab-btn pros-hidden" id="prosTabBtn" onclick="switchTab('pros', this)"><i class="fa-solid fa-terminal"></i> PROS Ops (Nascosto)</button>
+        </div>
+
+        <div class="container">
+            <!-- SEZIONE AMMINISTRATORE -->
+            <div id="admin" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+                        <div>
+                            <div class="stat-val" id="stat-totali">0</div>
+                            <div class="stat-label">Documenti Totali</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                        <div>
+                            <div class="stat-val" id="stat-ore">0h</div>
+                            <div class="stat-label">Ore Lavorate Totali</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+                        <div>
+                            <div class="stat-val" id="stat-spese">€0.00</div>
+                            <div class="stat-label">Totale Spese / Fatture</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Registro Generale (Rapportini, DDT, Fatture e Spese)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Codice / Tipo</th>
+                                <th>Data</th>
+                                <th>Utente / Fornitore</th>
+                                <th>Cantiere / Progetto</th>
+                                <th>Ore / Spese</th>
+                                <th>Stato</th>
+                                <th>Allegato PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEZIONE OPERATORI -->
+            <div id="operatori" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-pen-to-square"></i> Inserimento Rapportino Lavoro e Spese Cantiere</div>
+                    <form id="opForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Codice Rapportino:</label>
+                                <input type="text" id="op-codice" required placeholder="Es. RAP-2026-001">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Intervento:</label>
+                                <input type="date" id="op-data" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nome Operatore:</label>
+                                <input type="text" id="op-nome-display" readonly style="background:#f1f5f9; font-weight:bold;">
+                            </div>
+                            <div class="form-group">
+                                <label>Cantiere / Destinazione:</label>
+                                <input type="text" id="op-cantiere" required placeholder="Es. Cantiere Milano Sud">
+                            </div>
+                            <div class="form-group">
+                                <label>Ore Lavorate:</label>
+                                <input type="number" id="op-ore" step="0.5" required placeholder="8">
+                            </div>
+                            <div class="form-group">
+                                <label>Importo Spese Cantiere (€) [Opzionale]:</label>
+                                <input type="number" id="op-spesa-euro" step="0.01" placeholder="Es. 45.50 (parcheggio, minuterie, vitto)">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Allegato PDF (Rapportino firmato / Ricevuta Spesa):</label>
+                                <input type="file" id="op-pdf" accept="application/pdf">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Descrizione Attività e Dettaglio Spese:</label>
+                                <textarea id="op-note" rows="3" placeholder="Descrivi il lavoro svolto ed eventuali dettagli sulle spese sostenute..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">Invia Rapportino e Spese</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SEZIONE FORNITORI -->
+            <div id="fornitori" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-file-invoice-dollar"></i> Caricamento Documenti Fornitore (DDT, Fatture, Reso Merce, Estratto Conto)</div>
+                    <form id="fornForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Tipo Documento:</label>
+                                <select id="forn-tipo-doc" required>
+                                    <option value="DDT">DDT (Documento di Trasporto)</option>
+                                    <option value="FATTURA">Fattura Accompagnatoria / Acconto</option>
+                                    <option value="RESO">Reso Merce a Magazzino</option>
+                                    <option value="ESTRATTO_CONTO">Estratto Conto Periodico</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Numero / Codice Documento:</label>
+                                <input type="text" id="forn-codice" required placeholder="Es. DDT-99482 oppure FAT-2026/12">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Documento:</label>
+                                <input type="date" id="forn-data" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ragione Sociale Fornitore:</label>
+                                <input type="text" id="forn-nome-display" readonly style="background:#f1f5f9; font-weight:bold;">
+                            </div>
+                            <div class="form-group">
+                                <label>Cantiere / Impianto Destinazione:</label>
+                                <input type="text" id="forn-cantiere" required placeholder="Es. Cantiere Sede Centrale">
+                            </div>
+                            <div class="form-group">
+                                <label>Importo Totale Documento (€) [Se applicabile]:</label>
+                                <input type="number" id="forn-importo" step="0.01" placeholder="Es. 1250.00">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Carica Documento in PDF (Obbligatorio per DDT/Fatture/Estratto Conto):</label>
+                                <input type="file" id="forn-pdf" accept="application/pdf" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Note / Dettaglio Materiali e Giacenze:</label>
+                                <textarea id="forn-note" rows="3" placeholder="Elenco componenti consegnati, causale di reso o annotazioni per la contabilita..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit" style="background-color: #059669;">Invia Documento Fornitore</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SEZIONE CANTIERI E GIACENZE -->
+            <div id="magazzino" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-boxes-stacked"></i> Archivio Documenti Cantiere e Forniture</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cantiere / Destinazione</th>
+                                <th>Data</th>
+                                <th>Fornitore / Mittente</th>
+                                <th>Tipo / Codice</th>
+                                <th>Dettagli / Materiali</th>
+                            </tr>
+                        </thead>
+                        <tbody id="giacenzeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEZIONE IMPOSTAZIONI -->
+            <div id="settings" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-user-plus"></i> Creazione Account Operatori e Fornitori</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Crea credenziali di accesso dedicate per consentire a operatore o fornitore di caricare i propri dati.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Username / Ragione Sociale:</label>
+                            <input type="text" id="new-username" placeholder="Es. m.rossi oppure fornitore_srl">
+                        </div>
+                        <div class="form-group">
+                            <label>Password Accesso:</label>
+                            <input type="text" id="new-user-pass" placeholder="Imposta password personale">
+                        </div>
+                        <div class="form-group">
+                            <label>Ruolo Account:</label>
+                            <select id="new-user-role">
+                                <option value="Operatore">Operatore (Rapportini & Spese)</option>
+                                <option value="Fornitore">Fornitore (DDT, Fatture, Resi)</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <button class="btn-submit btn-success" onclick="addUser()">Crea e Attiva Account</button>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 20px; font-size: 1rem; margin-bottom: 10px;">Elenco Accounts Attivi</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Ruolo</th>
+                                <th>Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-power-off"></i> Controllo Manutenzione Offline</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Puoi bloccare la piattaforma e metterla in manutenzione con un timer alla rovescia.</p>
+                    <button class="btn-submit btn-warning" onclick="toggleMaintenance(true)"><i class="fa-solid fa-triangle-exclamation"></i> Attiva Modalità Manutenzione Offline</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-key"></i> Modifica Password Amministratore</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nuova Password Admin:</label>
+                            <input type="password" id="new-admin-pass" placeholder="Inserisci nuova password">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn-submit" onclick="changeAdminPass()">Aggiorna Password Admin</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-headset"></i> Assistenza Remota (Password Temporanea Max 30 min)</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Genera un accesso temporaneo con durata massima di 30 minuti per l'assistenza tecnica.</p>
+                    <button class="btn-submit btn-warning" onclick="generateTempPass()">Genera Credenziali Temporanee</button>
+                    <div id="temp-creds-box" class="temp-creds-box">
+                        <p><strong>Username Temporaneo:</strong> <span id="temp-usr">support_pros</span></p>
+                        <p><strong>Password Temporanea:</strong> <span id="temp-pwd">----</span></p>
+                        <p><strong>Scadenza:</strong> <span id="temp-timer">30:00</span></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-download"></i> Backup & Esportazione Dati</div>
+                    <button class="btn-submit" style="background:#4b5563;" onclick="exportBackup()"><i class="fa-solid fa-file-export"></i> Scarica Backup JSON</button>
+                </div>
+
+                <div class="card" style="border: 1px solid var(--danger);">
+                    <div class="card-header" style="color: var(--danger);"><i class="fa-solid fa-trash"></i> Reset Totale Database</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="password" id="reset-confirm-pass" placeholder="Password Admin per confermare">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn-submit btn-danger" onclick="resetDatabase()">RESETTA DATABASE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEZIONE NASCOSTA PROS OPS -->
+            <div id="pros" class="tab-content">
+                <div class="card" style="background: #faf5ff; border-color: #c084fc;">
+                    <div class="card-header" style="color: #6b21a8;"><i class="fa-solid fa-terminal"></i> PROS Technical Operations</div>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Pannello sviluppatore diagnostica avanzata e gestione licenza.</p>
+                    <div class="form-group">
+                        <label>Stato Licenza Key:</label>
+                        <input type="text" readonly value="PROS-2026-MAINT-KEY (ATTIVA)" style="background: #e9d5ff; font-weight: bold; color: #581c87;">
+                    </div>
+                    <div class="form-group">
+                        <label>Credenziali Account Nascosto Tecnico:</label>
+                        <input type="text" readonly value="Username: admin_maint | Pass: Maint#2026!Secret" style="background: #f3e8ff;">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Modal Accesso Manutenzione / Licenza -->
-    <div id="admin-modal" class="modal">
-        <h3>Accesso Manutenzione</h3>
-        <input type="text" id="maint-user" placeholder="Username SuperAdmin">
-        <input type="password" id="maint-pass" placeholder="Password Nascosta">
-        <input type="text" id="maint-key" placeholder="License Key (XXXX-XXXX-XXXX)">
-        <button onclick="verifyMaintenanceAccess()">Accedi / Disattiva Manutenzione</button>
-        <p id="modal-error" style="color: red; display: none; font-size: 12px; margin-top: 5px;"></p>
-    </div>
-
-    <!-- Footer -->
+    <!-- FOOTER COPYRIGHT -->
     <footer>
-        <p>
-            © <span id="year"></span> <span class="secret-trigger" onclick="handleSecretClick()">Rapportini Enterprise PROS</span>. 
-            Tutti i diritti riservati.
-        </p>
+        <p>© <span id="copyright-year">2026</span> <strong class="secret-click" onclick="handleSecretClick()">Rapportini Enterprise PROS</strong>. Tutti i diritti riservati.</p>
     </footer>
 
     <script>
-        // Credenziali e Licenza Nascoste (In un'applicazione enterprise è preferibile verificarle lato backend/Flask)
-        const ADMIN_USER = "admin_maint";
-        const ADMIN_PASS = "Maint#2026!Secure";
-        const LICENSE_KEY = "PROS-2026-MAINT-OFFLINE";
+        // CREDENZIALI NASCOSTE E LICENZA TECNICA
+        const HIDDEN_MAINT_USER = "admin_maint";
+        const HIDDEN_MAINT_PASS = "Maint#2026!Secret";
+        const SYSTEM_LICENSE_KEY = "PROS-2026-KEY";
 
-        // Impostazione Data di Fine Manutenzione / Countdown (Es: 2 ore da adesso)
-        let maintenanceEndTime = new Date(Date.now() + 2 * 60 * 60 * 1000).getTime();
-        let isSystemOffline = false; // Modificare a true per bloccare l'app in modalità offline
+        let systemUsers = JSON.parse(localStorage.getItem('systemUsers')) || [
+            { username: 'admin', pass: 'admin123', role: 'Admin' },
+            { username: 'Mario Rossi', pass: 'op123', role: 'Operatore' },
+            { username: 'TechSupplies Srl', pass: 'forn123', role: 'Fornitore' }
+        ];
 
-        // Imposta l'anno corrente nel footer
-        document.getElementById('year').innerText = new Date().getFullYear();
+        let adminPassword = localStorage.getItem('adminPassword') || 'admin123';
+        let currentUserObj = null;
+        let tempCredentials = null;
+        let tempTimerInterval = null;
 
-        // Trigger Nascosto: 5 click sul nome per aprire il pannello segreto
-        let clickCount = 0;
-        function handleSecretClick() {
-            clickCount++;
-            if (clickCount >= 5) {
-                document.getElementById('admin-modal').style.display = 'block';
-                clickCount = 0;
-            }
-        }
+        // MANUTENZIONE & TIMER
+        let maintenanceEndTime = localStorage.getItem('maintEndTime') ? parseInt(localStorage.getItem('maintEndTime')) : null;
+        let isMaintenanceActive = localStorage.getItem('isMaintActive') === 'true';
 
-        // Verifica credenziali e Licenza
-        function verifyMaintenanceAccess() {
-            const user = document.getElementById('maint-user').value;
-            const pass = document.getElementById('maint-pass').value;
-            const key = document.getElementById('maint-key').value;
-            const errorMsg = document.getElementById('modal-error');
-
-            if (user === ADMIN_USER && pass === ADMIN_PASS && key === LICENSE_KEY) {
-                isSystemOffline = !isSystemOffline;
-                document.getElementById('offline-overlay').style.display = isSystemOffline ? 'flex' : 'none';
-                document.getElementById('admin-modal').style.display = 'none';
-                alert(isSystemOffline ? "Modalità offline attivata!" : "Modalità offline disattivata!");
+        function checkMaintenanceStatus() {
+            if (isMaintenanceActive) {
+                document.getElementById('maintenance-screen').style.display = 'flex';
+                startMaintCountdown();
             } else {
-                errorMsg.innerText = "Credenziali o License Key errata!";
-                errorMsg.style.display = "block";
+                document.getElementById('maintenance-screen').style.display = 'none';
             }
         }
 
-        // Gestione Contatore alla rovescia (Countdown Timer)
-        const timerInterval = setInterval(function() {
-            const now = new Date().getTime();
-            const distance = maintenanceEndTime - now;
+        function toggleMaintenance(status) {
+            isMaintenanceActive = status;
+            localStorage.setItem('isMaintActive', status);
+            if (status) {
+                maintenanceEndTime = Date.now() + 30 * 60 * 1000; // 30 Minuti
+                localStorage.setItem('maintEndTime', maintenanceEndTime);
+            }
+            checkMaintenanceStatus();
+        }
 
-            if (distance < 0) {
-                clearInterval(timerInterval);
-                document.getElementById("countdown-timer").innerText = "COMPLETATA";
-                document.getElementById("overlay-countdown").innerText = "COMPLETATA";
-                document.getElementById("offline-overlay").style.display = "none";
-                document.getElementById("maintenance-banner").style.display = "none";
+        function startMaintCountdown() {
+            const timerEl = document.getElementById('maint-countdown');
+            const interval = setInterval(() => {
+                if (!isMaintenanceActive) {
+                    clearInterval(interval);
+                    return;
+                }
+                const now = Date.now();
+                const diff = Math.max(0, Math.floor((maintenanceEndTime - now) / 1000));
+                
+                const m = Math.floor(diff / 60);
+                const s = diff % 60;
+                timerEl.innerText = `00:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+
+                if (diff <= 0) {
+                    clearInterval(interval);
+                    toggleMaintenance(false);
+                    alert('Manutenzione terminata. Il sistema è tornato online!');
+                }
+            }, 1000);
+        }
+
+        // LOGIN SBLOCCO TECNICO MANUTENZIONE
+        document.getElementById('maintBypassForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('maint-user-input').value.trim();
+            const p = document.getElementById('maint-pass-input').value.trim();
+            const k = document.getElementById('maint-key-input').value.trim();
+
+            if (u === HIDDEN_MAINT_USER && p === HIDDEN_MAINT_PASS && k === SYSTEM_LICENSE_KEY) {
+                alert('Accesso di manutenzione autorizzato. Modalità offline disattivata.');
+                toggleMaintenance(false);
+                loginSuccess({ username: 'SuperAdmin Tecnico', role: 'Admin' });
+            } else {
+                alert('Credenziali o License Key non valide!');
+            }
+        });
+
+        // GESTIONE LOGIN STANDARD
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            if (user.toLowerCase() === 'admin' && pass === adminPassword) {
+                loginSuccess({ username: 'Admin', role: 'Admin' });
                 return;
             }
 
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            if (tempCredentials && user === tempCredentials.user && pass === tempCredentials.pass) {
+                if (Date.now() < tempCredentials.expires) {
+                    loginSuccess({ username: 'Support PROS', role: 'Admin' });
+                    return;
+                }
+            }
 
-            const formattedTime = 
-                (hours < 10 ? "0" + hours : hours) + ":" +
-                (minutes < 10 ? "0" + minutes : minutes) + ":" +
-                (seconds < 10 ? "0" + seconds : seconds);
+            const found = systemUsers.find(u => u.username.toLowerCase() === user.toLowerCase() && u.pass === pass);
+            if (found) {
+                loginSuccess(found);
+                return;
+            }
 
-            document.getElementById("countdown-timer").innerText = formattedTime;
-            document.getElementById("overlay-countdown").innerText = formattedTime;
-        }, 1000);
+            document.getElementById('login-error').style.display = 'block';
+        });
 
-        // Attivazione schermata offline se flag attivo
-        if (isSystemOffline) {
-            document.getElementById('offline-overlay').style.display = 'flex';
+        function loginSuccess(userObj) {
+            currentUserObj = userObj;
+            localStorage.setItem('currentUserObj', JSON.stringify(userObj));
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('logged-user').innerText = userObj.username;
+            document.getElementById('logged-role').innerText = userObj.role;
+
+            applyPermissions();
+            loadData();
+            renderUsers();
+        }
+
+        function applyPermissions() {
+            const role = currentUserObj.role;
+            const btnAdmin = document.getElementById('tab-btn-admin');
+            const btnOp = document.getElementById('tab-btn-operatori');
+            const btnForn = document.getElementById('tab-btn-fornitori');
+            const btnGiac = document.getElementById('tab-btn-magazzino');
+            const btnSet = document.getElementById('tab-btn-settings');
+
+            if (role === 'Operatore') {
+                btnAdmin.style.display = 'none';
+                btnForn.style.display = 'none';
+                btnSet.style.display = 'none';
+                btnOp.style.display = 'inline-block';
+                btnGiac.style.display = 'inline-block';
+                document.getElementById('op-nome-display').value = currentUserObj.username;
+                switchTab('operatori', btnOp);
+            } else if (role === 'Fornitore') {
+                btnAdmin.style.display = 'none';
+                btnOp.style.display = 'none';
+                btnSet.style.display = 'none';
+                btnForn.style.display = 'inline-block';
+                btnGiac.style.display = 'inline-block';
+                document.getElementById('forn-nome-display').value = currentUserObj.username;
+                switchTab('fornitori', btnForn);
+            } else {
+                btnAdmin.style.display = 'inline-block';
+                btnOp.style.display = 'inline-block';
+                btnForn.style.display = 'inline-block';
+                btnGiac.style.display = 'inline-block';
+                btnSet.style.display = 'inline-block';
+                document.getElementById('op-nome-display').value = currentUserObj.username;
+                document.getElementById('forn-nome-display').value = currentUserObj.username;
+                switchTab('admin', btnAdmin);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUserObj');
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(btn) btn.classList.add('active');
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('op-data').value = today;
+        document.getElementById('forn-data').value = today;
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/rapportini');
+                const data = await res.json();
+                
+                let totOre = 0;
+                let totSpese = 0;
+                const tbody = document.getElementById('adminTableBody');
+                const giacTbody = document.getElementById('giacenzeTableBody');
+                
+                if (tbody) tbody.innerHTML = '';
+                if (giacTbody) giacTbody.innerHTML = '';
+
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const oreMatch = item.note ? item.note.match(/\[Ore: ([\d.]+)\]/) : null;
+                        const spesaMatch = item.note ? item.note.match(/\[Spesa: €([\d.]+)\]/) : null;
+                        
+                        const ore = oreMatch ? parseFloat(oreMatch[1]) : 0;
+                        const spesa = spesaMatch ? parseFloat(spesaMatch[1]) : 0;
+                        
+                        totOre += ore;
+                        totSpese += spesa;
+                        
+                        const isForn = item.codice ? (item.codice.startsWith('FORN') || item.codice.startsWith('DDT') || item.codice.startsWith('FAT') || item.codice.startsWith('RESO')) : false;
+
+                        if (tbody) {
+                            const row = `<tr>
+                                <td><b>${item.codice || ''}</b></td>
+                                <td>${item.data || ''}</td>
+                                <td>${item.operatore || ''}</td>
+                                <td>${item.cliente || ''}</td>
+                                <td>${ore > 0 ? ore + ' ore' : ''} ${spesa > 0 ? '€' + spesa.toFixed(2) : ''}</td>
+                                <td><span class="badge ${isForn ? 'badge-fornitore' : 'badge-approvato'}">${isForn ? 'Fornitore' : 'Operatore'}</span></td>
+                                <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> Apri PDF</a>` : '-'}</td>
+                            </tr>`;
+                            tbody.innerHTML += row;
+                        }
+
+                        if (giacTbody) {
+                            const giacRow = `<tr>
+                                <td><b>${item.cliente || ''}</b></td>
+                                <td>${item.data || ''}</td>
+                                <td>${item.operatore || ''}</td>
+                                <td>${item.codice || ''}</td>
+                                <td>${item.note || ''}</td>
+                            </tr>`;
+                            giacTbody.innerHTML += giacRow;
+                        }
+                    });
+                }
+
+                if (document.getElementById('stat-totali')) document.getElementById('stat-totali').innerText = Array.isArray(data) ? data.length : 0;
+                if (document.getElementById('stat-ore')) document.getElementById('stat-ore').innerText = totOre + 'h';
+                if (document.getElementById('stat-spese')) document.getElementById('stat-spese').innerText = '€' + totSpese.toFixed(2);
+            } catch(e) {
+                console.error("Errore recupero dati:", e);
+            }
+        }
+
+        // SUBMIT OPERATORE
+        document.getElementById('opForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const ore = document.getElementById('op-ore').value;
+            const spesa = document.getElementById('op-spesa-euro').value || 0;
+            const noteText = document.getElementById('op-note').value;
+
+            formData.append('codice', document.getElementById('op-codice').value);
+            formData.append('data', document.getElementById('op-data').value);
+            formData.append('operatore', currentUserObj.username);
+            formData.append('cliente', document.getElementById('op-cantiere').value);
+            formData.append('note', `${noteText} [Ore: ${ore}] [Spesa: €${spesa}]`);
+
+            const pdfFile = document.getElementById('op-pdf').files[0];
+            if(pdfFile) formData.append('pdf', pdfFile);
+
+            const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
+            if(res.ok) {
+                alert('Rapportino ed eventuali spese inseriti con successo!');
+                document.getElementById('opForm').reset();
+                document.getElementById('op-data').value = today;
+                document.getElementById('op-nome-display').value = currentUserObj.username;
+                loadData();
+            }
+        });
+
+        // SUBMIT FORNITORE
+        document.getElementById('fornForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const tipoDoc = document.getElementById('forn-tipo-doc').value;
+            const importo = document.getElementById('forn-importo').value || 0;
+            const noteText = document.getElementById('forn-note').value;
+            const cod = document.getElementById('forn-codice').value;
+
+            formData.append('codice', `${tipoDoc}-${cod}`);
+            formData.append('data', document.getElementById('forn-data').value);
+            formData.append('operatore', currentUserObj.username);
+            formData.append('cliente', document.getElementById('forn-cantiere').value);
+            formData.append('note', `[Tipo: ${tipoDoc}] ${noteText} [Spesa: €${importo}]`);
+
+            const pdfFile = document.getElementById('forn-pdf').files[0];
+            if(pdfFile) formData.append('pdf', pdfFile);
+
+            const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
+            if(res.ok) {
+                alert('Documento Fornitore salvato con successo!');
+                document.getElementById('fornForm').reset();
+                document.getElementById('forn-data').value = today;
+                document.getElementById('forn-nome-display').value = currentUserObj.username;
+                loadData();
+            }
+        });
+
+        // GESTIONE UTENTI
+        function renderUsers() {
+            localStorage.setItem('systemUsers', JSON.stringify(systemUsers));
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                systemUsers.forEach((u, index) => {
+                    tbody.innerHTML += `<tr>
+                        <td><b>${u.username}</b></td>
+                        <td><code>${u.pass}</code></td>
+                        <td>${u.role}</td>
+                        <td><button class="btn-logout" onclick="removeUser(${index})">Elimina</button></td>
+                    </tr>`;
+                });
+            }
+        }
+
+        function addUser() {
+            const name = document.getElementById('new-username').value.trim();
+            const pass = document.getElementById('new-user-pass').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            if(!name || !pass) return alert('Inserisci sia lo Username che la Password!');
+            systemUsers.push({ username: name, pass: pass, role: role });
+            document.getElementById('new-username').value = '';
+            document.getElementById('new-user-pass').value = '';
+            renderUsers();
+            alert(`Account ${role} "${name}" creato!`);
+        }
+
+        function removeUser(index) {
+            systemUsers.splice(index, 1);
+            renderUsers();
+        }
+
+        function changeAdminPass() {
+            const newP = document.getElementById('new-admin-pass').value;
+            if(!newP) return alert('Inserisci la nuova password');
+            adminPassword = newP;
+            localStorage.setItem('adminPassword', adminPassword);
+            document.getElementById('new-admin-pass').value = '';
+            alert('Password Admin aggiornata!');
+        }
+
+        function generateTempPass() {
+            const pass = Math.random().toString(36).slice(-8);
+            const expires = Date.now() + 30 * 60 * 1000;
+            tempCredentials = { user: 'support_pros', pass: pass, expires: expires };
+            
+            document.getElementById('temp-pwd').innerText = pass;
+            document.getElementById('temp-creds-box').style.display = 'block';
+
+            if(tempTimerInterval) clearInterval(tempTimerInterval);
+            tempTimerInterval = setInterval(() => {
+                const diff = Math.max(0, Math.floor((tempCredentials.expires - Date.now()) / 1000));
+                const m = Math.floor(diff / 60);
+                const s = diff % 60;
+                document.getElementById('temp-timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                if(diff === 0) {
+                    clearInterval(tempTimerInterval);
+                    tempCredentials = null;
+                }
+            }, 1000);
+        }
+
+        async function resetDatabase() {
+            const pass = document.getElementById('reset-confirm-pass').value;
+            if(pass !== adminPassword) return alert('Password Admin errata!');
+            if(confirm('CANCELLARE TUTTI I RAPPORTINI E DOCUMENTI?')) {
+                alert('Database resettato.');
+                location.reload();
+            }
+        }
+
+        async function exportBackup() {
+            const res = await fetch('/api/rapportini');
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_rapportini_${today}.json`;
+            a.click();
+        }
+
+        // TRICK NASCOSTO: 5 CLICK SUL FOOTER PER APRIRE PROS OPS
+        let secretClicks = 0;
+        function handleSecretClick() {
+            secretClicks++;
+            if (secretClicks >= 5) {
+                secretClicks = 0;
+                const prosBtn = document.getElementById('prosTabBtn');
+                prosBtn.style.display = 'inline-block';
+                alert('Pannello PROS Ops Sbloccato!');
+            }
+        }
+
+        // AVVIO
+        checkMaintenanceStatus();
+        const savedUserStr = localStorage.getItem('currentUserObj');
+        if (savedUserStr) {
+            try { loginSuccess(JSON.parse(savedUserStr)); } catch(e) {}
         }
     </script>
 </body>
