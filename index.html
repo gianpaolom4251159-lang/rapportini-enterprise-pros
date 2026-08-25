@@ -72,6 +72,7 @@
         .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
         .badge-approvato { background: #dcfce7; color: #166534; }
         .badge-revisione { background: #fef3c7; color: #92400e; }
+        .badge-fornitore { background: #e0e7ff; color: #3730a3; }
         
         .temp-creds-box { background: #f0fdf4; border: 1px dashed var(--success); padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
     </style>
@@ -85,15 +86,15 @@
                 <i class="fa-solid fa-lock"></i>
                 <h2>Accedi al Sistema</h2>
             </div>
-            <div id="login-error" class="error-msg">Username o Password non validi.</div>
+            <div id="login-error" class="error-msg">Username o Password errati.</div>
             <form id="loginForm">
                 <div class="form-group">
-                    <label>Username:</label>
-                    <input type="text" id="username" required placeholder="Inserisci username" value="admin">
+                    <label>Username / Ragione Sociale:</label>
+                    <input type="text" id="username" required placeholder="Es. admin, m.rossi, fornitore_srl">
                 </div>
                 <div class="form-group">
                     <label>Password:</label>
-                    <input type="password" id="password" required placeholder="Inserisci password" value="admin123">
+                    <input type="password" id="password" required placeholder="Inserisci password">
                 </div>
                 <button type="submit" class="btn-submit">Accedi</button>
             </form>
@@ -105,17 +106,17 @@
         <header>
             <div class="logo"><i class="fa-solid fa-file-invoice"></i> Rapportini Enterprise PROS</div>
             <div class="header-right">
-                <span class="user-badge"><i class="fa-solid fa-user"></i> Utente: <strong id="logged-user">Admin</strong></span>
+                <span class="user-badge"><i class="fa-solid fa-user"></i> Utente: <strong id="logged-user">--</strong> (<span id="logged-role">--</span>)</span>
                 <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
             </div>
         </header>
 
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('admin', this)"><i class="fa-solid fa-user-shield"></i> Amministratore</button>
-            <button class="tab-btn" onclick="switchTab('operatori', this)"><i class="fa-solid fa-hard-hat"></i> Operatori</button>
-            <button class="tab-btn" onclick="switchTab('fornitori', this)"><i class="fa-solid fa-truck"></i> Fornitori</button>
-            <button class="tab-btn" onclick="switchTab('magazzino', this)"><i class="fa-solid fa-boxes-stacked"></i> Cantieri & Giacenze</button>
-            <button class="tab-btn" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Impostazioni</button>
+        <div class="nav-tabs" id="mainNavTabs">
+            <button class="tab-btn active" id="tab-btn-admin" onclick="switchTab('admin', this)"><i class="fa-solid fa-user-shield"></i> Amministratore</button>
+            <button class="tab-btn" id="tab-btn-operatori" onclick="switchTab('operatori', this)"><i class="fa-solid fa-hard-hat"></i> Operatore (Rapportini e Spese)</button>
+            <button class="tab-btn" id="tab-btn-fornitori" onclick="switchTab('fornitori', this)"><i class="fa-solid fa-truck-ramp-box"></i> Area Fornitori (DDT / Fatture / Resi)</button>
+            <button class="tab-btn" id="tab-btn-magazzino" onclick="switchTab('magazzino', this)"><i class="fa-solid fa-boxes-stacked"></i> Cantieri & Giacenze</button>
+            <button class="tab-btn" id="tab-btn-settings" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Impostazioni & Utenti</button>
             <button class="tab-btn pros-hidden" id="prosTabBtn" onclick="switchTab('pros', this)"><i class="fa-solid fa-terminal"></i> PROS Ops (Nascosto)</button>
         </div>
 
@@ -127,37 +128,37 @@
                         <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
                         <div>
                             <div class="stat-val" id="stat-totali">0</div>
-                            <div class="stat-label">Rapportini Totali</div>
+                            <div class="stat-label">Documenti Totali</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
                         <div>
                             <div class="stat-val" id="stat-ore">0h</div>
-                            <div class="stat-label">Ore Registrate</div>
+                            <div class="stat-label">Ore Lavorate Totali</div>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
                         <div>
-                            <div class="stat-val" id="stat-revisione">0</div>
-                            <div class="stat-label">In Revisione</div>
+                            <div class="stat-val" id="stat-spese">€0.00</div>
+                            <div class="stat-label">Totale Spese / Fatture</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">Gestione Rapportini Ricevuti</div>
+                    <div class="card-header">Registro Generale (Rapportini, DDT, Fatture e Spese)</div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Codice</th>
+                                <th>Codice / Tipo</th>
                                 <th>Data</th>
-                                <th>Operatore / Fornitore</th>
+                                <th>Utente / Fornitore</th>
                                 <th>Cantiere / Progetto</th>
-                                <th>Ore</th>
+                                <th>Ore / Spese</th>
                                 <th>Stato</th>
-                                <th>PDF</th>
+                                <th>Allegato PDF</th>
                             </tr>
                         </thead>
                         <tbody id="adminTableBody"></tbody>
@@ -168,7 +169,7 @@
             <!-- SEZIONE OPERATORI -->
             <div id="operatori" class="tab-content">
                 <div class="card">
-                    <div class="card-header">Inserimento Rapportino Operatore</div>
+                    <div class="card-header"><i class="fa-solid fa-pen-to-square"></i> Inserimento Rapportino Lavoro e Spese Cantiere</div>
                     <form id="opForm">
                         <div class="form-grid">
                             <div class="form-group">
@@ -180,11 +181,11 @@
                                 <input type="date" id="op-data" required>
                             </div>
                             <div class="form-group">
-                                <label>Operatore:</label>
-                                <select id="op-nome-select" required></select>
+                                <label>Nome Operatore:</label>
+                                <input type="text" id="op-nome-display" readonly style="background:#f1f5f9; font-weight:bold;">
                             </div>
                             <div class="form-group">
-                                <label>Cantiere / Progetto:</label>
+                                <label>Cantiere / Destinazione:</label>
                                 <input type="text" id="op-cantiere" required placeholder="Es. Cantiere Milano Sud">
                             </div>
                             <div class="form-group">
@@ -192,15 +193,19 @@
                                 <input type="number" id="op-ore" step="0.5" required placeholder="8">
                             </div>
                             <div class="form-group">
-                                <label>Allegato PDF (Opzionale):</label>
+                                <label>Importo Spese Cantiere (€) [Opzionale]:</label>
+                                <input type="number" id="op-spesa-euro" step="0.01" placeholder="Es. 45.50 (parcheggio, minuterie, vitto)">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Allegato PDF (Rapportino firmato / Ricevuta Spesa):</label>
                                 <input type="file" id="op-pdf" accept="application/pdf">
                             </div>
                             <div class="form-group full-width">
-                                <label>Descrizione Attività / Note:</label>
-                                <textarea id="op-note" rows="3" placeholder="Descrivi le lavorazioni eseguite..."></textarea>
+                                <label>Descrizione Attività e Dettaglio Spese:</label>
+                                <textarea id="op-note" rows="3" placeholder="Descrivi il lavoro svolto ed eventuali dettagli sulle spese sostenute..."></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit">Salva nel Database (Operatore)</button>
+                        <button type="submit" class="btn-submit">Invia Rapportino e Spese</button>
                     </form>
                 </div>
             </div>
@@ -208,39 +213,48 @@
             <!-- SEZIONE FORNITORI -->
             <div id="fornitori" class="tab-content">
                 <div class="card">
-                    <div class="card-header">Registrazione Prestazione / Materiale Fornitore</div>
+                    <div class="card-header"><i class="fa-solid fa-file-invoice-dollar"></i> Caricamento Documenti Fornitore (DDT, Fatture, Reso Merce, Estratto Conto)</div>
                     <form id="fornForm">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Codice Documento:</label>
-                                <input type="text" id="forn-codice" required placeholder="Es. FORN-2026-001">
+                                <label>Tipo Documento:</label>
+                                <select id="forn-tipo-doc" required>
+                                    <option value="DDT">DDT (Documento di Trasporto)</option>
+                                    <option value="FATTURA">Fattura Accompagnatoria / Acconto</option>
+                                    <option value="RESO">Reso Merce a Magazzino</option>
+                                    <option value="ESTRATTO_CONTO">Estratto Conto Periodico</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label>Data Fornitura:</label>
+                                <label>Numero / Codice Documento:</label>
+                                <input type="text" id="forn-codice" required placeholder="Es. DDT-99482 oppure FAT-2026/12">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Documento:</label>
                                 <input type="date" id="forn-data" required>
                             </div>
                             <div class="form-group">
                                 <label>Ragione Sociale Fornitore:</label>
-                                <select id="forn-nome-select" required></select>
+                                <input type="text" id="forn-nome-display" readonly style="background:#f1f5f9; font-weight:bold;">
                             </div>
                             <div class="form-group">
                                 <label>Cantiere / Impianto Destinazione:</label>
-                                <input type="text" id="forn-cantiere" required placeholder="Es. Impianto Roma Nord">
+                                <input type="text" id="forn-cantiere" required placeholder="Es. Cantiere Sede Centrale">
                             </div>
                             <div class="form-group">
-                                <label>Ore / Prestazione:</label>
-                                <input type="number" id="forn-ore" step="0.5" required placeholder="6">
-                            </div>
-                            <div class="form-group">
-                                <label>Allegato PDF (Aggiorna Giacenze):</label>
-                                <input type="file" id="forn-pdf" accept="application/pdf">
+                                <label>Importo Totale Documento (€) [Se applicabile]:</label>
+                                <input type="number" id="forn-importo" step="0.01" placeholder="Es. 1250.00">
                             </div>
                             <div class="form-group full-width">
-                                <label>Dettaglio Materiali / Note:</label>
-                                <textarea id="forn-note" rows="3" placeholder="Es. Consegnati 50m Cavo, 10 Interruttori..."></textarea>
+                                <label>Carica Documento in PDF (Obbligatorio per DDT/Fatture/Estratto Conto):</label>
+                                <input type="file" id="forn-pdf" accept="application/pdf" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Note / Dettaglio Materiali e Giacenze:</label>
+                                <textarea id="forn-note" rows="3" placeholder="Elenco componenti consegnati, causale di reso o annotazioni per la contabilita..."></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit" style="background-color: #059669;">Salva nel Database (Fornitore)</button>
+                        <button type="submit" class="btn-submit" style="background-color: #059669;">Invia Documento Fornitore</button>
                     </form>
                 </div>
             </div>
@@ -248,14 +262,15 @@
             <!-- SEZIONE CANTIERI E GIACENZE -->
             <div id="magazzino" class="tab-content">
                 <div class="card">
-                    <div class="card-header">Riepilogo Cantieri e Materiali/Giacenze Registrati da PDF/Note</div>
+                    <div class="card-header"><i class="fa-solid fa-boxes-stacked"></i> Archivio Documenti Cantiere e Forniture</div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Cantiere / Cliente</th>
-                                <th>Ultimo Aggiornamento</th>
-                                <th>Fornitore / Fonte</th>
-                                <th>Dettagli Materiali / Giacenze</th>
+                                <th>Cantiere / Destinazione</th>
+                                <th>Data</th>
+                                <th>Fornitore / Mittente</th>
+                                <th>Tipo / Codice</th>
+                                <th>Dettagli / Materiali</th>
                             </tr>
                         </thead>
                         <tbody id="giacenzeTableBody"></tbody>
@@ -266,27 +281,35 @@
             <!-- SEZIONE IMPOSTAZIONI -->
             <div id="settings" class="tab-content">
                 <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-users"></i> Gestione Operatori e Fornitori</div>
+                    <div class="card-header"><i class="fa-solid fa-user-plus"></i> Creazione Account Operatori e Fornitori</div>
+                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Crea credenziali di accesso dedicate per consentire a operatore o fornitore di caricare i propri dati.</p>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Nuovo Utente:</label>
-                            <input type="text" id="new-username" placeholder="Nome utente">
+                            <label>Username / Ragione Sociale:</label>
+                            <input type="text" id="new-username" placeholder="Es. m.rossi oppure fornitore_srl">
                         </div>
                         <div class="form-group">
-                            <label>Ruolo:</label>
+                            <label>Password Accesso:</label>
+                            <input type="text" id="new-user-pass" placeholder="Imposta password personale">
+                        </div>
+                        <div class="form-group">
+                            <label>Ruolo Account:</label>
                             <select id="new-user-role">
-                                <option value="Operatore">Operatore</option>
-                                <option value="Fornitore">Fornitore</option>
+                                <option value="Operatore">Operatore (Rapportini & Spese)</option>
+                                <option value="Fornitore">Fornitore (DDT, Fatture, Resi)</option>
                             </select>
                         </div>
                         <div class="form-group full-width">
-                            <button class="btn-submit btn-success" onclick="addUser()">Aggiungi Anagrafica Utente</button>
+                            <button class="btn-submit btn-success" onclick="addUser()">Crea e Attiva Account</button>
                         </div>
                     </div>
-                    <table style="margin-top: 15px;">
+                    
+                    <h3 style="margin-top: 20px; font-size: 1rem; margin-bottom: 10px;">Elenco Accounts Attivi</h3>
+                    <table>
                         <thead>
                             <tr>
                                 <th>Username</th>
+                                <th>Password</th>
                                 <th>Ruolo</th>
                                 <th>Azione</th>
                             </tr>
@@ -303,7 +326,7 @@
                             <input type="password" id="new-admin-pass" placeholder="Inserisci nuova password">
                         </div>
                         <div class="form-group">
-                            <button class="btn-submit" onclick="changeAdminPass()">Aggiorna Password</button>
+                            <button class="btn-submit" onclick="changeAdminPass()">Aggiorna Password Admin</button>
                         </div>
                     </div>
                 </div>
@@ -321,13 +344,11 @@
 
                 <div class="card">
                     <div class="card-header"><i class="fa-solid fa-download"></i> Backup & Esportazione Dati</div>
-                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Scarica una copia dei rapportini e delle giacenze memorizzate.</p>
                     <button class="btn-submit" style="background:#4b5563;" onclick="exportBackup()"><i class="fa-solid fa-file-export"></i> Scarica Backup JSON</button>
                 </div>
 
                 <div class="card" style="border: 1px solid var(--danger);">
                     <div class="card-header" style="color: var(--danger);"><i class="fa-solid fa-trash"></i> Reset Totale Database</div>
-                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Attenzione: Questa azione cancellerà permanentemente tutti i rapportini registrati. È richiesta la password dell'amministratore.</p>
                     <div class="form-grid">
                         <div class="form-group">
                             <input type="password" id="reset-confirm-pass" placeholder="Password Admin per confermare">
@@ -339,75 +360,123 @@
                 </div>
             </div>
 
-            <!-- SEZIONE NASCOSTA PROS (OFFLINE & MANUTENZIONE) -->
+            <!-- SEZIONE NASCOSTA PROS -->
             <div id="pros" class="tab-content">
                 <div class="card" style="background: #faf5ff; border-color: #c084fc;">
-                    <div class="card-header" style="color: #6b21a8;"><i class="fa-solid fa-terminal"></i> PROS Technical Operations (Modalità Offline & Manutenzione)</div>
-                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Pannello di controllo sviluppatori per la diagnostica offline del sistema.</p>
+                    <div class="card-header" style="color: #6b21a8;"><i class="fa-solid fa-terminal"></i> PROS Technical Operations</div>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Pannello sviluppatore diagnostica avanzata.</p>
                     <div class="form-group">
-                        <label>Stato Server Render / SQLite:</label>
+                        <label>Stato Server / SQLite Backend:</label>
                         <input type="text" readonly value="ONLINE - Connesso a database.db" style="background: #e9d5ff; font-weight: bold;">
                     </div>
-                    <button class="btn-submit" style="background-color: #7e22ce;" onclick="alert('Stato manutenzione aggiornato.')">Attiva/Disattiva Modalità Manutenzione</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Database Utenti locali con password dedicate
         let systemUsers = JSON.parse(localStorage.getItem('systemUsers')) || [
-            { username: 'admin', role: 'Admin' },
-            { username: 'Mario Rossi', role: 'Operatore' },
-            { username: 'TechSupplies Srl', role: 'Fornitore' }
+            { username: 'admin', pass: 'admin123', role: 'Admin' },
+            { username: 'Mario Rossi', pass: 'op123', role: 'Operatore' },
+            { username: 'TechSupplies Srl', pass: 'forn123', role: 'Fornitore' }
         ];
 
         let adminPassword = localStorage.getItem('adminPassword') || 'admin123';
+        let currentUserObj = null;
         let tempCredentials = null;
         let tempTimerInterval = null;
 
+        // GESTIONE LOGIN
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
 
             if (user.toLowerCase() === 'admin' && pass === adminPassword) {
-                loginSuccess('admin');
+                loginSuccess({ username: 'Admin', role: 'Admin' });
                 return;
             }
 
             if (tempCredentials && user === tempCredentials.user && pass === tempCredentials.pass) {
                 if (Date.now() < tempCredentials.expires) {
-                    loginSuccess(user);
+                    loginSuccess({ username: 'Support PROS', role: 'Admin' });
                     return;
                 }
             }
 
-            const found = systemUsers.find(u => u.username.toLowerCase() === user.toLowerCase());
-            if (found && (pass === 'user123' || pass === adminPassword)) {
-                loginSuccess(found.username);
+            const found = systemUsers.find(u => u.username.toLowerCase() === user.toLowerCase() && u.pass === pass);
+            if (found) {
+                loginSuccess(found);
                 return;
             }
 
             document.getElementById('login-error').style.display = 'block';
         });
 
-        function loginSuccess(user) {
-            localStorage.setItem('currentUser', user);
+        function loginSuccess(userObj) {
+            currentUserObj = userObj;
+            localStorage.setItem('currentUserObj', JSON.stringify(userObj));
+            
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('logged-user').innerText = user;
+            document.getElementById('logged-user').innerText = userObj.username;
+            document.getElementById('logged-role').innerText = userObj.role;
+
+            // Adatta le sezioni visibili in base al ruolo
+            applyPermissions();
+            
             loadData();
             renderUsers();
         }
 
+        function applyPermissions() {
+            const role = currentUserObj.role;
+            const btnAdmin = document.getElementById('tab-btn-admin');
+            const btnOp = document.getElementById('tab-btn-operatori');
+            const btnForn = document.getElementById('tab-btn-fornitori');
+            const btnGiac = document.getElementById('tab-btn-magazzino');
+            const btnSet = document.getElementById('tab-btn-settings');
+
+            if (role === 'Operatore') {
+                btnAdmin.style.display = 'none';
+                btnForn.style.display = 'none';
+                btnSet.style.display = 'none';
+                btnOp.style.display = 'inline-block';
+                btnGiac.style.display = 'inline-block';
+                document.getElementById('op-nome-display').value = currentUserObj.username;
+                switchTab('operatori', btnOp);
+            } else if (role === 'Fornitore') {
+                btnAdmin.style.display = 'none';
+                btnOp.style.display = 'none';
+                btnSet.style.display = 'none';
+                btnForn.style.display = 'inline-block';
+                btnGiac.style.display = 'inline-block';
+                document.getElementById('forn-nome-display').value = currentUserObj.username;
+                switchTab('fornitori', btnForn);
+            } else {
+                // Admin vede tutto
+                btnAdmin.style.display = 'inline-block';
+                btnOp.style.display = 'inline-block';
+                btnForn.style.display = 'inline-block';
+                btnGiac.style.display = 'inline-block';
+                btnSet.style.display = 'inline-block';
+                document.getElementById('op-nome-display').value = currentUserObj.username;
+                document.getElementById('forn-nome-display').value = currentUserObj.username;
+                switchTab('admin', btnAdmin);
+            }
+        }
+
         function logout() {
-            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentUserObj');
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
         }
 
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) loginSuccess(savedUser);
+        const savedUserStr = localStorage.getItem('currentUserObj');
+        if (savedUserStr) {
+            try { loginSuccess(JSON.parse(savedUserStr)); } catch(e) {}
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -426,7 +495,7 @@
                 const data = await res.json();
                 
                 let totOre = 0;
-                let inRev = 0;
+                let totSpese = 0;
                 const tbody = document.getElementById('adminTableBody');
                 const giacTbody = document.getElementById('giacenzeTableBody');
                 
@@ -435,12 +504,16 @@
 
                 if (Array.isArray(data)) {
                     data.forEach(item => {
-                        const ore = parseFloat(item.note ? (item.note.match(/\[Ore: ([\d.]+)\]/)?.[1] || 8) : 8);
-                        totOre += ore;
+                        const oreMatch = item.note ? item.note.match(/\[Ore: ([\d.]+)\]/) : null;
+                        const spesaMatch = item.note ? item.note.match(/\[Spesa: €([\d.]+)\]/) : null;
                         
-                        const isForn = item.codice ? item.codice.startsWith('FORN') : false;
-                        const stato = isForn ? 'In Revisione' : 'Approvato';
-                        if(stato === 'In Revisione') inRev++;
+                        const ore = oreMatch ? parseFloat(oreMatch[1]) : 0;
+                        const spesa = spesaMatch ? parseFloat(spesaMatch[1]) : 0;
+                        
+                        totOre += ore;
+                        totSpese += spesa;
+                        
+                        const isForn = item.codice ? (item.codice.startsWith('FORN') || item.codice.startsWith('DDT') || item.codice.startsWith('FAT') || item.codice.startsWith('RESO')) : false;
 
                         if (tbody) {
                             const row = `<tr>
@@ -448,19 +521,20 @@
                                 <td>${item.data || ''}</td>
                                 <td>${item.operatore || ''}</td>
                                 <td>${item.cliente || ''}</td>
-                                <td>${ore} ore</td>
-                                <td><span class="badge ${stato === 'Approvato' ? 'badge-approvato' : 'badge-revisione'}">${stato}</span></td>
-                                <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> PDF</a>` : '-'}</td>
+                                <td>${ore > 0 ? ore + ' ore' : ''} ${spesa > 0 ? '€' + spesa.toFixed(2) : ''}</td>
+                                <td><span class="badge ${isForn ? 'badge-fornitore' : 'badge-approvato'}">${isForn ? 'Fornitore' : 'Operatore'}</span></td>
+                                <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> Apri PDF</a>` : '-'}</td>
                             </tr>`;
                             tbody.innerHTML += row;
                         }
 
-                        if (giacTbody && (isForn || item.pdf_path)) {
+                        if (giacTbody) {
                             const giacRow = `<tr>
                                 <td><b>${item.cliente || ''}</b></td>
                                 <td>${item.data || ''}</td>
                                 <td>${item.operatore || ''}</td>
-                                <td>${item.note || 'Documento/PDF Allegato in Archivio'}</td>
+                                <td>${item.codice || ''}</td>
+                                <td>${item.note || ''}</td>
                             </tr>`;
                             giacTbody.innerHTML += giacRow;
                         }
@@ -469,73 +543,96 @@
 
                 if (document.getElementById('stat-totali')) document.getElementById('stat-totali').innerText = Array.isArray(data) ? data.length : 0;
                 if (document.getElementById('stat-ore')) document.getElementById('stat-ore').innerText = totOre + 'h';
-                if (document.getElementById('stat-revisione')) document.getElementById('stat-revisione').innerText = inRev;
+                if (document.getElementById('stat-spese')) document.getElementById('stat-spese').innerText = '€' + totSpese.toFixed(2);
             } catch(e) {
                 console.error("Errore nel recupero dati:", e);
             }
         }
 
-        async function submitForm(e, prefix) {
+        // SUBMIT OPERATORE
+        document.getElementById('opForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData();
-            const ore = document.getElementById(`${prefix}-ore`).value;
-            const noteText = document.getElementById(`${prefix}-note`).value;
-            const name = document.getElementById(`${prefix}-nome-select`).value;
+            const ore = document.getElementById('op-ore').value;
+            const spesa = document.getElementById('op-spesa-euro').value || 0;
+            const noteText = document.getElementById('op-note').value;
 
-            formData.append('codice', document.getElementById(`${prefix}-codice`).value);
-            formData.append('data', document.getElementById(`${prefix}-data`).value);
-            formData.append('operatore', name);
-            formData.append('cliente', document.getElementById(`${prefix}-cantiere`).value);
-            formData.append('note', `${noteText} [Ore: ${ore}]`);
+            formData.append('codice', document.getElementById('op-codice').value);
+            formData.append('data', document.getElementById('op-data').value);
+            formData.append('operatore', currentUserObj.username);
+            formData.append('cliente', document.getElementById('op-cantiere').value);
+            formData.append('note', `${noteText} [Ore: ${ore}] [Spesa: €${spesa}]`);
 
-            const pdfFile = document.getElementById(`${prefix}-pdf`).files[0];
+            const pdfFile = document.getElementById('op-pdf').files[0];
             if(pdfFile) formData.append('pdf', pdfFile);
 
             const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
             if(res.ok) {
-                alert('Rapportino registrato con successo nel database!');
-                document.getElementById(e.target.id).reset();
-                document.getElementById(`${prefix}-data`).value = today;
+                alert('Rapportino ed eventuali spese inseriti con successo!');
+                document.getElementById('opForm').reset();
+                document.getElementById('op-data').value = today;
+                document.getElementById('op-nome-display').value = currentUserObj.username;
                 loadData();
-                switchTab('admin', document.querySelectorAll('.tab-btn')[0]);
             }
-        }
+        });
 
-        document.getElementById('opForm').addEventListener('submit', (e) => submitForm(e, 'op'));
-        document.getElementById('fornForm').addEventListener('submit', (e) => submitForm(e, 'forn'));
+        // SUBMIT FORNITORE
+        document.getElementById('fornForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const tipoDoc = document.getElementById('forn-tipo-doc').value;
+            const importo = document.getElementById('forn-importo').value || 0;
+            const noteText = document.getElementById('forn-note').value;
+            const cod = document.getElementById('forn-codice').value;
 
+            formData.append('codice', `${tipoDoc}-${cod}`);
+            formData.append('data', document.getElementById('forn-data').value);
+            formData.append('operatore', currentUserObj.username);
+            formData.append('cliente', document.getElementById('forn-cantiere').value);
+            formData.append('note', `[Tipo: ${tipoDoc}] ${noteText} [Spesa: €${importo}]`);
+
+            const pdfFile = document.getElementById('forn-pdf').files[0];
+            if(pdfFile) formData.append('pdf', pdfFile);
+
+            const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
+            if(res.ok) {
+                alert('Documento Fornitore salvato con successo!');
+                document.getElementById('fornForm').reset();
+                document.getElementById('forn-data').value = today;
+                document.getElementById('forn-nome-display').value = currentUserObj.username;
+                loadData();
+            }
+        });
+
+        // GESTIONE UTENTI (ADMIN)
         function renderUsers() {
             localStorage.setItem('systemUsers', JSON.stringify(systemUsers));
             const tbody = document.getElementById('usersTableBody');
-            const opSelect = document.getElementById('op-nome-select');
-            const fornSelect = document.getElementById('forn-nome-select');
-
-            if (tbody) tbody.innerHTML = '';
-            if (opSelect) opSelect.innerHTML = '';
-            if (fornSelect) fornSelect.innerHTML = '';
-
-            systemUsers.forEach((u, index) => {
-                if (tbody) {
+            if (tbody) {
+                tbody.innerHTML = '';
+                systemUsers.forEach((u, index) => {
                     tbody.innerHTML += `<tr>
-                        <td>${u.username}</td>
+                        <td><b>${u.username}</b></td>
+                        <td><code>${u.pass}</code></td>
                         <td>${u.role}</td>
                         <td><button class="btn-logout" onclick="removeUser(${index})">Elimina</button></td>
                     </tr>`;
-                }
-
-                if(u.role === 'Operatore' && opSelect) opSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
-                if(u.role === 'Fornitore' && fornSelect) fornSelect.innerHTML += `<option value="${u.username}">${u.username}</option>`;
-            });
+                });
+            }
         }
 
         function addUser() {
-            const name = document.getElementById('new-username').value;
+            const name = document.getElementById('new-username').value.trim();
+            const pass = document.getElementById('new-user-pass').value.trim();
             const role = document.getElementById('new-user-role').value;
-            if(!name) return alert('Inserisci un nome utente');
-            systemUsers.push({ username: name, role: role });
+            
+            if(!name || !pass) return alert('Inserisci sia lo Username che la Password per il nuovo account!');
+            
+            systemUsers.push({ username: name, pass: pass, role: role });
             document.getElementById('new-username').value = '';
+            document.getElementById('new-user-pass').value = '';
             renderUsers();
-            alert('Utente aggiunto!');
+            alert(`Account ${role} "${name}" creato con successo!`);
         }
 
         function removeUser(index) {
@@ -549,7 +646,7 @@
             adminPassword = newP;
             localStorage.setItem('adminPassword', adminPassword);
             document.getElementById('new-admin-pass').value = '';
-            alert('Password Amministratore aggiornata!');
+            alert('Password Admin aggiornata!');
         }
 
         function generateTempPass() {
@@ -577,10 +674,10 @@
         async function resetDatabase() {
             const pass = document.getElementById('reset-confirm-pass').value;
             if(pass !== adminPassword) {
-                return alert('Password Admin errata! Impossibile resettare.');
+                return alert('Password Admin errata!');
             }
-            if(confirm('SEI SICURO DI VOLER CANCELLARE TUTTI I RAPPORTINI?')) {
-                alert('Database resettato con successo!');
+            if(confirm('SEI SICURO DI VOLER CANCELLARE TUTTI I DOCUMENTI E RAPPORTINI?')) {
+                alert('Database resettato.');
                 document.getElementById('reset-confirm-pass').value = '';
                 location.reload();
             }
