@@ -1,33 +1,28 @@
-import os
-import json
+from flask import Flask, request, jsonify, render_template
 import sqlite3
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from werkzeug.utils import secure_filename
+import os
 
-app = Flask(__name__, static_folder='.', template_folder='.')
+app = Flask(__name__, static_folder='.', static_url_path='')
 
-UPLOAD_PDF_DIR = os.path.join('uploads', 'pdf')
-UPLOAD_LOGO_DIR = os.path.join('uploads', 'logo')
-os.makedirs(UPLOAD_PDF_DIR, exist_ok=True)
-os.makedirs(UPLOAD_LOGO_DIR, exist_ok=True)
-
-DB_NAME = "database.db"
+DB_FILE = 'database.db'
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    # Tabella Utenti centralizzata
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS rapportini (
+        CREATE TABLE IF NOT EXISTS utenti (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            codice TEXT NOT NULL,
-            data TEXT NOT NULL,
-            operatore TEXT NOT NULL,
-            cliente TEXT NOT NULL,
-            note TEXT,
-            prodotti TEXT,
-            pdf_path TEXT
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            ruolo TEXT NOT NULL
         )
     ''')
+    # Creazione utente admin predefinito se non esiste
+    cursor.execute("SELECT * FROM utenti WHERE username = 'admin'")
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO utenti (username, password, ruolo) VALUES ('admin', 'admin123', 'admin')")
+    
     conn.commit()
     conn.close()
 
@@ -35,61 +30,79 @@ init_db()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return app.send_static_file('index.html')
 
-@app.route('/api/rapportini', methods=['GET'])
-def get_rapportini():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, codice, data, operatore, cliente, note, prodotti, pdf_path FROM rapportini ORDER BY id DESC")
-    rows = cursor.fetchall()
-    conn.close()
-
-    rapportini = []
-    for row in rows:
-        rapportini.append({
-            "id": row[0],
-            "codice": row[1],
-            "data": row[2],
-            "operatore": row[3],
-            "cliente": row[4],
-            "note": row[5],
-            "prodotti": json.loads(row[6]) if row[6] else [],
-            "pdf_path": row[7]
-        })
-    return jsonify(rapportini)
-
-@app.route('/api/rapportini', methods=['POST'])
-def add_rapportino():
-    data = request.form
-    codice = data.get('codice')
-    data_interv = data.get('data')
-    operatore = data.get('operatore')
-    cliente = data.get('cliente')
-    note = data.get('note', '')
-    prodotti = data.get('prodotti', '[]')
+# API Login Centralizzato
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
     
-    pdf_file = request.files.get('pdf')
-    pdf_path = ""
-    if pdf_file and pdf_file.filename != '':
-        filename = secure_filename(pdf_file.filename)
-        pdf_path = os.path.join(UPLOAD_PDF_DIR, filename)
-        pdf_file.save(pdf_path)
-
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO rapportini (codice, data, operatore, cliente, note, prodotti, pdf_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (codice, data_interv, operatore, cliente, note, prodotti, pdf_path))
+    cursor.execute("SELECT username, ruolo FROM utenti WHERE username = ? AND password = ?", (username, password))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        return jsonify({"success": True, "username": user[0], "ruolo": user[1]})
+    return jsonify({"success": False, "message": "Credenziali non valide"}), 401
+
+# API Ottieni tutti gli utenti (Admin)
+@app.route('/api/utenti', methods=['GET'])
+def get_utenti():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, ruolo FROM utenti")
+    utenti = [{"username": row[0], "ruolo": row[1]} for row in cursor.fetchall()]
+    conn.close()
+    return jsonify({"success": True, "utenti": utenti})
+
+# API Crea/Aggiorna Utente sul DB Online (Admin)
+@app.route('/api/utenti/salva', methods=['POST'])
+def salva_utente():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    ruolo = data.get('ruolo', 'operatore')
+    
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    # Verifica se l'utente esiste già
+    cursor.execute("SELECT id FROM utenti WHERE username = ?", (username,))
+    exists = cursor.fetchone()
+    
+    if exists:
+        # Aggiorna password e ruolo
+        if password:
+            cursor.execute("UPDATE utenti SET password = ?, ruolo = ? WHERE username = ?", (password, ruolo, username))
+        else:
+            cursor.execute("UPDATE utenti SET ruolo = ? WHERE username = ?", (ruolo, username))
+    else:
+        # Inserisci nuovo utente
+        cursor.execute("INSERT INTO utenti (username, password, ruolo) VALUES (?, ?, ?)", (username, password, ruolo))
+        
     conn.commit()
     conn.close()
+    return jsonify({"success": True, "message": f"Utente {username} salvato correttamente nel Database Online!"})
 
-    return jsonify({"success": True, "message": "Rapportino salvato nel database.db!"})
-
-@app.route('/uploads/pdf/<filename>')
-def get_pdf(filename):
-    return send_from_directory(UPLOAD_PDF_DIR, filename)
+# API Elimina Utente (Admin)
+@app.route('/api/utenti/elimina', methods=['POST'])
+def elimina_utente():
+    data = request.json
+    username = data.get('username')
+    if username == 'admin':
+        return jsonify({"success": False, "message": "Non puoi eliminare l'amministratore principale"}), 400
+        
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM utenti WHERE username = ?", (username,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": "Utente eliminato!"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
