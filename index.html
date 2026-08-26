@@ -4,814 +4,229 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapportini Enterprise PROS</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --border: #e2e8f0;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-
-        /* SCHERMATA LOGIN */
-        #login-screen { display: flex; justify-content: center; align-items: center; min-height: 80vh; background: #e2e8f0; flex: 1; }
-        .login-card { background: white; padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .login-header { text-align: center; margin-bottom: 25px; }
-        .login-header i { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
-        .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; text-align: center; font-weight: bold; }
-
-        /* PANNELLO PRINCIPALE */
-        #app-screen { display: none; flex: 1; }
-        header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .header-right { display: flex; align-items: center; gap: 15px; }
-        .user-badge { font-weight: 600; font-size: 0.9rem; color: #475569; }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
-
-        .nav-tabs { display: flex; gap: 10px; background: white; padding: 10px 30px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-        .tab-btn { padding: 10px 20px; border: none; background: none; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab-btn.pros-hidden { display: none; color: #8b5cf6; }
-
-        .container { padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 20px; }
-        .stat-icon { font-size: 2rem; color: var(--primary); background: #eff6ff; padding: 15px; border-radius: 8px; }
-        .stat-val { font-size: 1.8rem; font-weight: bold; }
-        .stat-label { color: #64748b; font-size: 0.9rem; }
-
-        .card { background: white; padding: 25px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 25px; }
-        .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .full-width { grid-column: span 2; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
-        
-        button.btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; }
-        button.btn-submit:hover { background: var(--primary-dark); }
-        .btn-danger { background: var(--danger) !important; }
-        .btn-warning { background: var(--warning) !important; color: white; }
-        .btn-success { background: var(--success) !important; }
-
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        th { background: #f8fafc; color: #475569; font-weight: 600; }
-        
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-        .badge-approvato { background: #dcfce7; color: #166534; }
-        .badge-fornitore { background: #e0e7ff; color: #3730a3; }
-        .temp-creds-box { background: #f0fdf4; border: 1px dashed var(--success); padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
-
-        /* BANNER E SCHERMATA OFFLINE / MANUTENZIONE */
-        #maintenance-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        .maint-box { background: #1e293b; padding: 40px; border-radius: 12px; border: 1px solid #334155; max-width: 500px; width: 100%; }
-        .timer-display { font-size: 2.2rem; font-weight: bold; color: #38bdf8; margin: 20px 0; font-family: monospace; }
-
-        /* FOOTER COPYRIGHT */
-        footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 15px; font-size: 0.85rem; border-top: 1px solid #1e293b; margin-top: auto; }
-        footer strong { color: #cbd5e1; }
-        .secret-click { cursor: default; user-select: none; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f9; }
+        .header { background: #1e293b; color: white; padding: 15px; text-align: center; }
+        .container { max-width: 900px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card { border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; border-radius: 6px; background: #fff; }
+        .card-tech { background: #fffbe6; border: 2px solid #ffe58f; }
+        .btn { padding: 10px 15px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-danger { background: #dc2626; }
+        .btn-success { background: #16a34a; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .input-group input, .input-group select { width: 100%; padding: 8px; box-sizing: border-box; }
+        .modal-blocco { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
+        .footer { text-align:center; margin-top:30px; padding:15px; color:#64748b; font-size:12px; cursor:pointer; }
+        .hidden { display: none !important; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
-    <!-- SCHERMATA OFFLINE MANUTENZIONE -->
-    <div id="maintenance-screen">
-        <div class="maint-box">
-            <i class="fa-solid fa-gears" style="font-size: 3rem; color: #f59e0b; margin-bottom: 15px;"></i>
-            <h2>Sistema in Manutenzione Offline</h2>
-            <p style="margin-top: 10px; color: #94a3b8;">L'applicazione è temporaneamente sospesa per manutenzione straordinaria o verifica della Licenza Key.</p>
-            
-            <div class="timer-display" id="maint-countdown">00:30:00</div>
-            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 20px;">Tempo stimato prima del ripristino automatico</p>
-
-            <form id="maintBypassForm" style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 20px;">
-                <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; color: #e2e8f0;">Sblocco Tecnico di Emergenza</p>
-                <div class="form-group">
-                    <input type="text" id="maint-user-input" placeholder="Username Tecnico" required style="background: #0f172a; color: white; border-color: #334155;">
-                </div>
-                <div class="form-group">
-                    <input type="password" id="maint-pass-input" placeholder="Password Nascosta" required style="background: #0f172a; color: white; border-color: #334155;">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="maint-key-input" placeholder="License Key (es. PROS-2026-KEY)" required style="background: #0f172a; color: white; border-color: #334155;">
-                </div>
-                <button type="submit" class="btn-submit btn-warning">Disattiva Manutenzione & Accedi</button>
-            </form>
+<!-- SCHERMATA BLOCCO / MANUTENZIONE OFFLINE -->
+<div id="maintScreen" class="modal-blocco hidden">
+    <h2>SISTEMA IN MANUTENZIONE OFFLINE</h2>
+    <p>Inserisci le credenziali del Pannello Tecnico per sbloccare:</p>
+    <div style="width: 320px; background: white; color: black; padding: 20px; border-radius: 8px;">
+        <div class="input-group">
+            <label>Username Tecnico</label>
+            <input type="text" id="techUser" placeholder="Username tecnico">
         </div>
+        <div class="input-group">
+            <label>Password Nascosta</label>
+            <input type="password" id="techPass" placeholder="Password pagina nascosta">
+        </div>
+        <button class="btn btn-success" style="width:100%" onclick="loginTecnico()">Sblocca / Accedi al Pannello</button>
+    </div>
+</div>
+
+<div class="header">
+    <h1>Rapportini Enterprise PROS</h1>
+</div>
+
+<div class="container">
+
+    <!-- PANNELLO SEPARATO: CONTROLLO TECNICO, OFFLINE & TIMER LICENZA -->
+    <div id="panelTecnico" class="card card-tech hidden">
+        <h3>Pannello Tecnico Separato (Gestione Licenza & Offline)</h3>
+        <p><strong>Stato Manutenzione Offline:</strong> <span id="statusMaint">DISATTIVATO</span></p>
+        <button class="btn btn-danger" onclick="toggleManutenzione(true)">Attiva Manutenzione Offline</button>
+        <button class="btn btn-success" onclick="toggleManutenzione(false)">Disattiva Manutenzione Offline</button>
+        <hr>
+        <h4>Conto alla Rovescia Licenza (365 Giorni)</h4>
+        <p>Tempo Rimanente: <strong id="timerDisplay">365 giorni 00:00:00</strong></p>
+        <button class="btn" onclick="toggleTimer(true)">Avvia Conto alla Rovescia</button>
+        <button class="btn btn-danger" onclick="toggleTimer(false)">Sospendi Conto alla Rovescia</button>
+        <button class="btn" onclick="resetTimer()">Reset 365 Giorni</button>
     </div>
 
-    <!-- SCHERMATA LOGIN -->
-    <div id="login-screen">
-        <div class="login-card">
-            <div class="login-header">
-                <i class="fa-solid fa-lock"></i>
-                <h2>Accedi al Sistema</h2>
-            </div>
-            <div id="login-error" class="error-msg">Username o Password errati.</div>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Username / Ragione Sociale:</label>
-                    <input type="text" id="username" required placeholder="Es. admin, m.rossi, fornitore_srl">
-                </div>
-                <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" id="password" required placeholder="Inserisci password">
-                </div>
-                <button type="submit" class="btn-submit">Accedi</button>
-            </form>
+    <!-- PANNELLO AMMINISTRATORE STANDARD -->
+    <div class="card">
+        <h3>Pannello Amministratore (Gestione Account Online)</h3>
+        <p>Crea nuovi utenti o modifica le password degli account esistenti. I dati vengono salvati sul <strong>Database Online</strong> e saranno subito validi su tutti i dispositivi (PC, Smartphone, Tablet).</p>
+        
+        <div class="input-group">
+            <label>Username Account</label>
+            <input type="text" id="accUsername" placeholder="Es. Mario Rossi o Fornitore1">
         </div>
+        <div class="input-group">
+            <label>Password (Crea o Modifica)</label>
+            <input type="password" id="accPassword" placeholder="Inserisci nuova password">
+        </div>
+        <div class="input-group">
+            <label>Ruolo Account</label>
+            <select id="accRuolo">
+                <option value="operatore">Operatore</option>
+                <option value="fornitore">Fornitore</option>
+                <option value="admin">Amministratore</option>
+            </select>
+        </div>
+        <button class="btn" onclick="salvaAccountOnline()">Salva / Aggiorna Account sul DB Online</button>
+
+        <h4 style="margin-top:20px;">Account Registrati nel Database Centralizzato</h4>
+        <div id="listaUtenti"></div>
     </div>
+</div>
 
-    <!-- PANNELLO APPLICAZIONE -->
-    <div id="app-screen">
-        <header>
-            <div class="logo"><i class="fa-solid fa-file-invoice"></i> Rapportini Enterprise PROS</div>
-            <div class="header-right">
-                <span class="user-badge"><i class="fa-solid fa-user"></i> Utente: <strong id="logged-user">--</strong> (<span id="logged-role">--</span>)</span>
-                <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-            </div>
-        </header>
+<div class="footer" onclick="contatoreClickFooter()">
+    <p>© 2026 Rapportini Enterprise PROS - Riservato</p>
+</div>
 
-        <div class="nav-tabs" id="mainNavTabs">
-            <button class="tab-btn active" id="tab-btn-admin" onclick="switchTab('admin', this)"><i class="fa-solid fa-user-shield"></i> Amministratore</button>
-            <button class="tab-btn" id="tab-btn-operatori" onclick="switchTab('operatori', this)"><i class="fa-solid fa-hard-hat"></i> Operatore (Rapportini e Spese)</button>
-            <button class="tab-btn" id="tab-btn-fornitori" onclick="switchTab('fornitori', this)"><i class="fa-solid fa-truck-ramp-box"></i> Area Fornitori (DDT / Fatture / Resi)</button>
-            <button class="tab-btn" id="tab-btn-magazzino" onclick="switchTab('magazzino', this)"><i class="fa-solid fa-boxes-stacked"></i> Cantieri & Giacenze</button>
-            <button class="tab-btn" id="tab-btn-settings" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Impostazioni & Utenti</button>
-            <button class="tab-btn pros-hidden" id="prosTabBtn" onclick="switchTab('pros', this)"><i class="fa-solid fa-terminal"></i> PROS Ops (Nascosto)</button>
-        </div>
+<script>
+    let clicks = 0;
+    let timerInterval = null;
+    let tempoRimanente = parseInt(localStorage.getItem('timerSeconds')) || (365 * 86400);
 
-        <div class="container">
-            <!-- SEZIONE AMMINISTRATORE -->
-            <div id="admin" class="tab-content active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
-                        <div>
-                            <div class="stat-val" id="stat-totali">0</div>
-                            <div class="stat-label">Documenti Totali</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
-                        <div>
-                            <div class="stat-val" id="stat-ore">0h</div>
-                            <div class="stat-label">Ore Lavorate Totali</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
-                        <div>
-                            <div class="stat-val" id="stat-spese">€0.00</div>
-                            <div class="stat-label">Totale Spese / Fatture</div>
-                        </div>
-                    </div>
-                </div>
+    // Verifica Stato Offline all'avvio
+    if(localStorage.getItem('inManutenzione') === 'true') {
+        document.getElementById('maintScreen').classList.remove('hidden');
+        document.getElementById('statusMaint').textContent = 'ATTIVATO';
+    }
 
-                <div class="card">
-                    <div class="card-header">Registro Generale (Rapportini, DDT, Fatture e Spese)</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Codice / Tipo</th>
-                                <th>Data</th>
-                                <th>Utente / Fornitore</th>
-                                <th>Cantiere / Progetto</th>
-                                <th>Ore / Spese</th>
-                                <th>Stato</th>
-                                <th>Allegato PDF</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
+    // Accesso al Pannello Tecnico con Credenziali Dedicate
+    function loginTecnico() {
+        const u = document.getElementById('techUser').value;
+        const p = document.getElementById('techPass').value;
 
-            <!-- SEZIONE OPERATORI -->
-            <div id="operatori" class="tab-content">
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-pen-to-square"></i> Inserimento Rapportino Lavoro e Spese Cantiere</div>
-                    <form id="opForm">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Codice Rapportino:</label>
-                                <input type="text" id="op-codice" required placeholder="Es. RAP-2026-001">
-                            </div>
-                            <div class="form-group">
-                                <label>Data Intervento:</label>
-                                <input type="date" id="op-data" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Nome Operatore:</label>
-                                <input type="text" id="op-nome-display" readonly style="background:#f1f5f9; font-weight:bold;">
-                            </div>
-                            <div class="form-group">
-                                <label>Cantiere / Destinazione:</label>
-                                <input type="text" id="op-cantiere" required placeholder="Es. Cantiere Milano Sud">
-                            </div>
-                            <div class="form-group">
-                                <label>Ore Lavorate:</label>
-                                <input type="number" id="op-ore" step="0.5" required placeholder="8">
-                            </div>
-                            <div class="form-group">
-                                <label>Importo Spese Cantiere (€) [Opzionale]:</label>
-                                <input type="number" id="op-spesa-euro" step="0.01" placeholder="Es. 45.50 (parcheggio, minuterie, vitto)">
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Allegato PDF (Rapportino firmato / Ricevuta Spesa):</label>
-                                <input type="file" id="op-pdf" accept="application/pdf">
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Descrizione Attività e Dettaglio Spese:</label>
-                                <textarea id="op-note" rows="3" placeholder="Descrivi il lavoro svolto ed eventuali dettagli sulle spese sostenute..."></textarea>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-submit">Invia Rapportino e Spese</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- SEZIONE FORNITORI -->
-            <div id="fornitori" class="tab-content">
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-file-invoice-dollar"></i> Caricamento Documenti Fornitore (DDT, Fatture, Reso Merce, Estratto Conto)</div>
-                    <form id="fornForm">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Tipo Documento:</label>
-                                <select id="forn-tipo-doc" required>
-                                    <option value="DDT">DDT (Documento di Trasporto)</option>
-                                    <option value="FATTURA">Fattura Accompagnatoria / Acconto</option>
-                                    <option value="RESO">Reso Merce a Magazzino</option>
-                                    <option value="ESTRATTO_CONTO">Estratto Conto Periodico</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Numero / Codice Documento:</label>
-                                <input type="text" id="forn-codice" required placeholder="Es. DDT-99482 oppure FAT-2026/12">
-                            </div>
-                            <div class="form-group">
-                                <label>Data Documento:</label>
-                                <input type="date" id="forn-data" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Ragione Sociale Fornitore:</label>
-                                <input type="text" id="forn-nome-display" readonly style="background:#f1f5f9; font-weight:bold;">
-                            </div>
-                            <div class="form-group">
-                                <label>Cantiere / Impianto Destinazione:</label>
-                                <input type="text" id="forn-cantiere" required placeholder="Es. Cantiere Sede Centrale">
-                            </div>
-                            <div class="form-group">
-                                <label>Importo Totale Documento (€) [Se applicabile]:</label>
-                                <input type="number" id="forn-importo" step="0.01" placeholder="Es. 1250.00">
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Carica Documento in PDF (Obbligatorio per DDT/Fatture/Estratto Conto):</label>
-                                <input type="file" id="forn-pdf" accept="application/pdf" required>
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Note / Dettaglio Materiali e Giacenze:</label>
-                                <textarea id="forn-note" rows="3" placeholder="Elenco componenti consegnati, causale di reso o annotazioni per la contabilita..."></textarea>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-submit" style="background-color: #059669;">Invia Documento Fornitore</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- SEZIONE CANTIERI E GIACENZE -->
-            <div id="magazzino" class="tab-content">
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-boxes-stacked"></i> Archivio Documenti Cantiere e Forniture</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Cantiere / Destinazione</th>
-                                <th>Data</th>
-                                <th>Fornitore / Mittente</th>
-                                <th>Tipo / Codice</th>
-                                <th>Dettagli / Materiali</th>
-                            </tr>
-                        </thead>
-                        <tbody id="giacenzeTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- SEZIONE IMPOSTAZIONI -->
-            <div id="settings" class="tab-content">
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-user-plus"></i> Creazione Account Operatori e Fornitori</div>
-                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Crea credenziali di accesso dedicate per consentire a operatore o fornitore di caricare i propri dati.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Username / Ragione Sociale:</label>
-                            <input type="text" id="new-username" placeholder="Es. m.rossi oppure fornitore_srl">
-                        </div>
-                        <div class="form-group">
-                            <label>Password Accesso:</label>
-                            <input type="text" id="new-user-pass" placeholder="Imposta password personale">
-                        </div>
-                        <div class="form-group">
-                            <label>Ruolo Account:</label>
-                            <select id="new-user-role">
-                                <option value="Operatore">Operatore (Rapportini & Spese)</option>
-                                <option value="Fornitore">Fornitore (DDT, Fatture, Resi)</option>
-                            </select>
-                        </div>
-                        <div class="form-group full-width">
-                            <button class="btn-submit btn-success" onclick="addUser()">Crea e Attiva Account</button>
-                        </div>
-                    </div>
-                    
-                    <h3 style="margin-top: 20px; font-size: 1rem; margin-bottom: 10px;">Elenco Accounts Attivi</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Password</th>
-                                <th>Ruolo</th>
-                                <th>Azione</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody"></tbody>
-                    </table>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-power-off"></i> Controllo Manutenzione Offline</div>
-                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Puoi bloccare la piattaforma e metterla in manutenzione con un timer alla rovescia.</p>
-                    <button class="btn-submit btn-warning" onclick="toggleMaintenance(true)"><i class="fa-solid fa-triangle-exclamation"></i> Attiva Modalità Manutenzione Offline</button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-key"></i> Modifica Password Amministratore</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nuova Password Admin:</label>
-                            <input type="password" id="new-admin-pass" placeholder="Inserisci nuova password">
-                        </div>
-                        <div class="form-group">
-                            <button class="btn-submit" onclick="changeAdminPass()">Aggiorna Password Admin</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-headset"></i> Assistenza Remota (Password Temporanea Max 30 min)</div>
-                    <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Genera un accesso temporaneo con durata massima di 30 minuti per l'assistenza tecnica.</p>
-                    <button class="btn-submit btn-warning" onclick="generateTempPass()">Genera Credenziali Temporanee</button>
-                    <div id="temp-creds-box" class="temp-creds-box">
-                        <p><strong>Username Temporaneo:</strong> <span id="temp-usr">support_pros</span></p>
-                        <p><strong>Password Temporanea:</strong> <span id="temp-pwd">----</span></p>
-                        <p><strong>Scadenza:</strong> <span id="temp-timer">30:00</span></p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><i class="fa-solid fa-download"></i> Backup & Esportazione Dati</div>
-                    <button class="btn-submit" style="background:#4b5563;" onclick="exportBackup()"><i class="fa-solid fa-file-export"></i> Scarica Backup JSON</button>
-                </div>
-
-                <div class="card" style="border: 1px solid var(--danger);">
-                    <div class="card-header" style="color: var(--danger);"><i class="fa-solid fa-trash"></i> Reset Totale Database</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <input type="password" id="reset-confirm-pass" placeholder="Password Admin per confermare">
-                        </div>
-                        <div class="form-group">
-                            <button class="btn-submit btn-danger" onclick="resetDatabase()">RESETTA DATABASE</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEZIONE NASCOSTA PROS OPS -->
-            <div id="pros" class="tab-content">
-                <div class="card" style="background: #faf5ff; border-color: #c084fc;">
-                    <div class="card-header" style="color: #6b21a8;"><i class="fa-solid fa-terminal"></i> PROS Technical Operations</div>
-                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Pannello sviluppatore diagnostica avanzata e gestione licenza.</p>
-                    <div class="form-group">
-                        <label>Stato Licenza Key:</label>
-                        <input type="text" readonly value="PROS-2026-MAINT-KEY (ATTIVA)" style="background: #e9d5ff; font-weight: bold; color: #581c87;">
-                    </div>
-                    <div class="form-group">
-                        <label>Credenziali Account Nascosto Tecnico:</label>
-                        <input type="text" readonly value="Username: admin_maint | Pass: Maint#2026!Secret" style="background: #f3e8ff;">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FOOTER COPYRIGHT -->
-    <footer>
-        <p>© <span id="copyright-year">2026</span> <strong class="secret-click" onclick="handleSecretClick()">Rapportini Enterprise PROS</strong>. Tutti i diritti riservati.</p>
-    </footer>
-
-    <script>
-        // CREDENZIALI NASCOSTE E LICENZA TECNICA
-        const HIDDEN_MAINT_USER = "admin_maint";
-        const HIDDEN_MAINT_PASS = "Maint#2026!Secret";
-        const SYSTEM_LICENSE_KEY = "PROS-2026-KEY";
-
-        let systemUsers = JSON.parse(localStorage.getItem('systemUsers')) || [
-            { username: 'admin', pass: 'admin123', role: 'Admin' },
-            { username: 'Mario Rossi', pass: 'op123', role: 'Operatore' },
-            { username: 'TechSupplies Srl', pass: 'forn123', role: 'Fornitore' }
-        ];
-
-        let adminPassword = localStorage.getItem('adminPassword') || 'admin123';
-        let currentUserObj = null;
-        let tempCredentials = null;
-        let tempTimerInterval = null;
-
-        // MANUTENZIONE & TIMER
-        let maintenanceEndTime = localStorage.getItem('maintEndTime') ? parseInt(localStorage.getItem('maintEndTime')) : null;
-        let isMaintenanceActive = localStorage.getItem('isMaintActive') === 'true';
-
-        function checkMaintenanceStatus() {
-            if (isMaintenanceActive) {
-                document.getElementById('maintenance-screen').style.display = 'flex';
-                startMaintCountdown();
-            } else {
-                document.getElementById('maintenance-screen').style.display = 'none';
-            }
+        if(u === 'tecnico1234' && p === 'pagina nascosta') {
+            alert('Accesso al Pannello Tecnico effettuato!');
+            document.getElementById('maintScreen').classList.add('hidden');
+            document.getElementById('panelTecnico').classList.remove('hidden');
+        } else {
+            alert('Username o Password del Pannello Tecnico errate!');
         }
+    }
 
-        function toggleMaintenance(status) {
-            isMaintenanceActive = status;
-            localStorage.setItem('isMaintActive', status);
-            if (status) {
-                maintenanceEndTime = Date.now() + 30 * 60 * 1000; // 30 Minuti
-                localStorage.setItem('maintEndTime', maintenanceEndTime);
-            }
-            checkMaintenanceStatus();
+    // 5 Click nel footer per sbloccare il Pannello Tecnico Separato
+    function contatoreClickFooter() {
+        clicks++;
+        if(clicks >= 5) {
+            document.getElementById('panelTecnico').classList.toggle('hidden');
+            alert('Pannello Tecnico Separato sbloccato!');
+            clicks = 0;
         }
+    }
 
-        function startMaintCountdown() {
-            const timerEl = document.getElementById('maint-countdown');
-            const interval = setInterval(() => {
-                if (!isMaintenanceActive) {
-                    clearInterval(interval);
-                    return;
-                }
-                const now = Date.now();
-                const diff = Math.max(0, Math.floor((maintenanceEndTime - now) / 1000));
-                
-                const m = Math.floor(diff / 60);
-                const s = diff % 60;
-                timerEl.innerText = `00:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    // Gestione Manutenzione Offline
+    function toggleManutenzione(stato) {
+        localStorage.setItem('inManutenzione', stato);
+        document.getElementById('statusMaint').textContent = stato ? 'ATTIVATO' : 'DISATTIVATO';
+        if(stato) {
+            document.getElementById('maintScreen').classList.remove('hidden');
+        } else {
+            document.getElementById('maintScreen').classList.add('hidden');
+            alert('Modalità Offline Disattivata.');
+        }
+    }
 
-                if (diff <= 0) {
-                    clearInterval(interval);
-                    toggleMaintenance(false);
-                    alert('Manutenzione terminata. Il sistema è tornato online!');
+    // Gestione Conto alla Rovescia Licenza
+    function aggiornaTimerDisplay() {
+        const gg = Math.floor(tempoRimanente / 86400);
+        const ore = Math.floor((tempoRimanente % 86400) / 3600);
+        const min = Math.floor((tempoRimanente % 3600) / 60);
+        const sec = tempoRimanente % 60;
+        document.getElementById('timerDisplay').textContent = 
+            `${gg} giorni ${ore.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    }
+
+    function toggleTimer(attivo) {
+        clearInterval(timerInterval);
+        if(attivo) {
+            timerInterval = setInterval(() => {
+                if(tempoRimanente > 0) {
+                    tempoRimanente--;
+                    localStorage.setItem('timerSeconds', tempoRimanente);
+                    aggiornaTimerDisplay();
+                } else {
+                    toggleManutenzione(true);
                 }
             }, 1000);
         }
+    }
 
-        // LOGIN SBLOCCO TECNICO MANUTENZIONE
-        document.getElementById('maintBypassForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const u = document.getElementById('maint-user-input').value.trim();
-            const p = document.getElementById('maint-pass-input').value.trim();
-            const k = document.getElementById('maint-key-input').value.trim();
+    function resetTimer() {
+        tempoRimanente = 365 * 86400;
+        localStorage.setItem('timerSeconds', tempoRimanente);
+        aggiornaTimerDisplay();
+    }
 
-            if (u === HIDDEN_MAINT_USER && p === HIDDEN_MAINT_PASS && k === SYSTEM_LICENSE_KEY) {
-                alert('Accesso di manutenzione autorizzato. Modalità offline disattivata.');
-                toggleMaintenance(false);
-                loginSuccess({ username: 'SuperAdmin Tecnico', role: 'Admin' });
-            } else {
-                alert('Credenziali o License Key non valide!');
-            }
+    // Salva o Modifica Utente sul DB Online (Pannello Admin)
+    async function salvaAccountOnline() {
+        const username = document.getElementById('accUsername').value.trim();
+        const password = document.getElementById('accPassword').value.trim();
+        const ruolo = document.getElementById('accRuolo').value;
+
+        if(!username || !password) {
+            alert('Compilare sia Username che Password');
+            return;
+        }
+
+        const res = await fetch('/api/utenti/salva', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, ruolo })
         });
+        const data = await res.json();
+        alert(data.message);
+        document.getElementById('accUsername').value = '';
+        document.getElementById('accPassword').value = '';
+        caricaUtentiDB();
+    }
 
-        // GESTIONE LOGIN STANDARD
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
+    // Carica Account dal Database Online
+    async function caricaUtentiDB() {
+        const res = await fetch('/api/utenti');
+        const data = await res.json();
+        const div = document.getElementById('listaUtenti');
+        div.innerHTML = '';
+        if(data.success) {
+            data.utenti.forEach(u => {
+                const item = document.createElement('div');
+                item.className = 'user-item';
+                item.innerHTML = `
+                    <span><strong>${u.username}</strong> (${u.ruolo})</span>
+                    ${u.username !== 'admin' ? `<button class="btn btn-danger" onclick="eliminaUtenteDB('${u.username}')">Elimina</button>` : ''}
+                `;
+                div.appendChild(item);
+            });
+        }
+    }
 
-            if (user.toLowerCase() === 'admin' && pass === adminPassword) {
-                loginSuccess({ username: 'Admin', role: 'Admin' });
-                return;
-            }
-
-            if (tempCredentials && user === tempCredentials.user && pass === tempCredentials.pass) {
-                if (Date.now() < tempCredentials.expires) {
-                    loginSuccess({ username: 'Support PROS', role: 'Admin' });
-                    return;
-                }
-            }
-
-            const found = systemUsers.find(u => u.username.toLowerCase() === user.toLowerCase() && u.pass === pass);
-            if (found) {
-                loginSuccess(found);
-                return;
-            }
-
-            document.getElementById('login-error').style.display = 'block';
+    async function eliminaUtenteDB(username) {
+        if(!confirm(`Vuoi davvero eliminare l'account ${username}?`)) return;
+        const res = await fetch('/api/utenti/elimina', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
         });
+        const data = await res.json();
+        alert(data.message);
+        caricaUtentiDB();
+    }
 
-        function loginSuccess(userObj) {
-            currentUserObj = userObj;
-            localStorage.setItem('currentUserObj', JSON.stringify(userObj));
-            
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('logged-user').innerText = userObj.username;
-            document.getElementById('logged-role').innerText = userObj.role;
-
-            applyPermissions();
-            loadData();
-            renderUsers();
-        }
-
-        function applyPermissions() {
-            const role = currentUserObj.role;
-            const btnAdmin = document.getElementById('tab-btn-admin');
-            const btnOp = document.getElementById('tab-btn-operatori');
-            const btnForn = document.getElementById('tab-btn-fornitori');
-            const btnGiac = document.getElementById('tab-btn-magazzino');
-            const btnSet = document.getElementById('tab-btn-settings');
-
-            if (role === 'Operatore') {
-                btnAdmin.style.display = 'none';
-                btnForn.style.display = 'none';
-                btnSet.style.display = 'none';
-                btnOp.style.display = 'inline-block';
-                btnGiac.style.display = 'inline-block';
-                document.getElementById('op-nome-display').value = currentUserObj.username;
-                switchTab('operatori', btnOp);
-            } else if (role === 'Fornitore') {
-                btnAdmin.style.display = 'none';
-                btnOp.style.display = 'none';
-                btnSet.style.display = 'none';
-                btnForn.style.display = 'inline-block';
-                btnGiac.style.display = 'inline-block';
-                document.getElementById('forn-nome-display').value = currentUserObj.username;
-                switchTab('fornitori', btnForn);
-            } else {
-                btnAdmin.style.display = 'inline-block';
-                btnOp.style.display = 'inline-block';
-                btnForn.style.display = 'inline-block';
-                btnGiac.style.display = 'inline-block';
-                btnSet.style.display = 'inline-block';
-                document.getElementById('op-nome-display').value = currentUserObj.username;
-                document.getElementById('forn-nome-display').value = currentUserObj.username;
-                switchTab('admin', btnAdmin);
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('currentUserObj');
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'flex';
-        }
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(btn) btn.classList.add('active');
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('op-data').value = today;
-        document.getElementById('forn-data').value = today;
-
-        async function loadData() {
-            try {
-                const res = await fetch('/api/rapportini');
-                const data = await res.json();
-                
-                let totOre = 0;
-                let totSpese = 0;
-                const tbody = document.getElementById('adminTableBody');
-                const giacTbody = document.getElementById('giacenzeTableBody');
-                
-                if (tbody) tbody.innerHTML = '';
-                if (giacTbody) giacTbody.innerHTML = '';
-
-                if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        const oreMatch = item.note ? item.note.match(/\[Ore: ([\d.]+)\]/) : null;
-                        const spesaMatch = item.note ? item.note.match(/\[Spesa: €([\d.]+)\]/) : null;
-                        
-                        const ore = oreMatch ? parseFloat(oreMatch[1]) : 0;
-                        const spesa = spesaMatch ? parseFloat(spesaMatch[1]) : 0;
-                        
-                        totOre += ore;
-                        totSpese += spesa;
-                        
-                        const isForn = item.codice ? (item.codice.startsWith('FORN') || item.codice.startsWith('DDT') || item.codice.startsWith('FAT') || item.codice.startsWith('RESO')) : false;
-
-                        if (tbody) {
-                            const row = `<tr>
-                                <td><b>${item.codice || ''}</b></td>
-                                <td>${item.data || ''}</td>
-                                <td>${item.operatore || ''}</td>
-                                <td>${item.cliente || ''}</td>
-                                <td>${ore > 0 ? ore + ' ore' : ''} ${spesa > 0 ? '€' + spesa.toFixed(2) : ''}</td>
-                                <td><span class="badge ${isForn ? 'badge-fornitore' : 'badge-approvato'}">${isForn ? 'Fornitore' : 'Operatore'}</span></td>
-                                <td>${item.pdf_path ? `<a href="/${item.pdf_path}" target="_blank" style="color:#2563eb"><i class="fa-solid fa-file-pdf"></i> Apri PDF</a>` : '-'}</td>
-                            </tr>`;
-                            tbody.innerHTML += row;
-                        }
-
-                        if (giacTbody) {
-                            const giacRow = `<tr>
-                                <td><b>${item.cliente || ''}</b></td>
-                                <td>${item.data || ''}</td>
-                                <td>${item.operatore || ''}</td>
-                                <td>${item.codice || ''}</td>
-                                <td>${item.note || ''}</td>
-                            </tr>`;
-                            giacTbody.innerHTML += giacRow;
-                        }
-                    });
-                }
-
-                if (document.getElementById('stat-totali')) document.getElementById('stat-totali').innerText = Array.isArray(data) ? data.length : 0;
-                if (document.getElementById('stat-ore')) document.getElementById('stat-ore').innerText = totOre + 'h';
-                if (document.getElementById('stat-spese')) document.getElementById('stat-spese').innerText = '€' + totSpese.toFixed(2);
-            } catch(e) {
-                console.error("Errore recupero dati:", e);
-            }
-        }
-
-        // SUBMIT OPERATORE
-        document.getElementById('opForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            const ore = document.getElementById('op-ore').value;
-            const spesa = document.getElementById('op-spesa-euro').value || 0;
-            const noteText = document.getElementById('op-note').value;
-
-            formData.append('codice', document.getElementById('op-codice').value);
-            formData.append('data', document.getElementById('op-data').value);
-            formData.append('operatore', currentUserObj.username);
-            formData.append('cliente', document.getElementById('op-cantiere').value);
-            formData.append('note', `${noteText} [Ore: ${ore}] [Spesa: €${spesa}]`);
-
-            const pdfFile = document.getElementById('op-pdf').files[0];
-            if(pdfFile) formData.append('pdf', pdfFile);
-
-            const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
-            if(res.ok) {
-                alert('Rapportino ed eventuali spese inseriti con successo!');
-                document.getElementById('opForm').reset();
-                document.getElementById('op-data').value = today;
-                document.getElementById('op-nome-display').value = currentUserObj.username;
-                loadData();
-            }
-        });
-
-        // SUBMIT FORNITORE
-        document.getElementById('fornForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            const tipoDoc = document.getElementById('forn-tipo-doc').value;
-            const importo = document.getElementById('forn-importo').value || 0;
-            const noteText = document.getElementById('forn-note').value;
-            const cod = document.getElementById('forn-codice').value;
-
-            formData.append('codice', `${tipoDoc}-${cod}`);
-            formData.append('data', document.getElementById('forn-data').value);
-            formData.append('operatore', currentUserObj.username);
-            formData.append('cliente', document.getElementById('forn-cantiere').value);
-            formData.append('note', `[Tipo: ${tipoDoc}] ${noteText} [Spesa: €${importo}]`);
-
-            const pdfFile = document.getElementById('forn-pdf').files[0];
-            if(pdfFile) formData.append('pdf', pdfFile);
-
-            const res = await fetch('/api/rapportini', { method: 'POST', body: formData });
-            if(res.ok) {
-                alert('Documento Fornitore salvato con successo!');
-                document.getElementById('fornForm').reset();
-                document.getElementById('forn-data').value = today;
-                document.getElementById('forn-nome-display').value = currentUserObj.username;
-                loadData();
-            }
-        });
-
-        // GESTIONE UTENTI
-        function renderUsers() {
-            localStorage.setItem('systemUsers', JSON.stringify(systemUsers));
-            const tbody = document.getElementById('usersTableBody');
-            if (tbody) {
-                tbody.innerHTML = '';
-                systemUsers.forEach((u, index) => {
-                    tbody.innerHTML += `<tr>
-                        <td><b>${u.username}</b></td>
-                        <td><code>${u.pass}</code></td>
-                        <td>${u.role}</td>
-                        <td><button class="btn-logout" onclick="removeUser(${index})">Elimina</button></td>
-                    </tr>`;
-                });
-            }
-        }
-
-        function addUser() {
-            const name = document.getElementById('new-username').value.trim();
-            const pass = document.getElementById('new-user-pass').value.trim();
-            const role = document.getElementById('new-user-role').value;
-            if(!name || !pass) return alert('Inserisci sia lo Username che la Password!');
-            systemUsers.push({ username: name, pass: pass, role: role });
-            document.getElementById('new-username').value = '';
-            document.getElementById('new-user-pass').value = '';
-            renderUsers();
-            alert(`Account ${role} "${name}" creato!`);
-        }
-
-        function removeUser(index) {
-            systemUsers.splice(index, 1);
-            renderUsers();
-        }
-
-        function changeAdminPass() {
-            const newP = document.getElementById('new-admin-pass').value;
-            if(!newP) return alert('Inserisci la nuova password');
-            adminPassword = newP;
-            localStorage.setItem('adminPassword', adminPassword);
-            document.getElementById('new-admin-pass').value = '';
-            alert('Password Admin aggiornata!');
-        }
-
-        function generateTempPass() {
-            const pass = Math.random().toString(36).slice(-8);
-            const expires = Date.now() + 30 * 60 * 1000;
-            tempCredentials = { user: 'support_pros', pass: pass, expires: expires };
-            
-            document.getElementById('temp-pwd').innerText = pass;
-            document.getElementById('temp-creds-box').style.display = 'block';
-
-            if(tempTimerInterval) clearInterval(tempTimerInterval);
-            tempTimerInterval = setInterval(() => {
-                const diff = Math.max(0, Math.floor((tempCredentials.expires - Date.now()) / 1000));
-                const m = Math.floor(diff / 60);
-                const s = diff % 60;
-                document.getElementById('temp-timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-                if(diff === 0) {
-                    clearInterval(tempTimerInterval);
-                    tempCredentials = null;
-                }
-            }, 1000);
-        }
-
-        async function resetDatabase() {
-            const pass = document.getElementById('reset-confirm-pass').value;
-            if(pass !== adminPassword) return alert('Password Admin errata!');
-            if(confirm('CANCELLARE TUTTI I RAPPORTINI E DOCUMENTI?')) {
-                alert('Database resettato.');
-                location.reload();
-            }
-        }
-
-        async function exportBackup() {
-            const res = await fetch('/api/rapportini');
-            const data = await res.json();
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup_rapportini_${today}.json`;
-            a.click();
-        }
-
-        // TRICK NASCOSTO: 5 CLICK SUL FOOTER PER APRIRE PROS OPS
-        let secretClicks = 0;
-        function handleSecretClick() {
-            secretClicks++;
-            if (secretClicks >= 5) {
-                secretClicks = 0;
-                const prosBtn = document.getElementById('prosTabBtn');
-                prosBtn.style.display = 'inline-block';
-                alert('Pannello PROS Ops Sbloccato!');
-            }
-        }
-
-        // AVVIO
-        checkMaintenanceStatus();
-        const savedUserStr = localStorage.getItem('currentUserObj');
-        if (savedUserStr) {
-            try { loginSuccess(JSON.parse(savedUserStr)); } catch(e) {}
-        }
-    </script>
+    aggiornaTimerDisplay();
+    caricaUtentiDB();
+</script>
 </body>
 </html>
